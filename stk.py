@@ -59,9 +59,9 @@ def process_range(val):
     if type(val) is not list:
         return [val]
     if len(val) == 2:
-        return range(val[0], val[1])
+        return range(val[0], val[1]+1)
     elif len(val) == 3:
-        return range(val[0], val[1], val[2])
+        return range(val[0], val[1]+1, val[2])
     return val
 
 def algorithm_name_for_algorithm(val):
@@ -76,17 +76,16 @@ def algorithm_name_for_algorithm(val):
 if __name__ == "__main__":
     args = process_args()
 
-    print(args)
+    args.gridsize = process_range(args.gridsize)
+    args.traits = process_range(args.traits)
+    args.features = process_range(args.features)
     
     args.algorithm = algorithm_name_for_algorithm(args.algorithm)
     
     print("width, height, features, traits, max_iterations, step_check, fast_get_connected_components_len(experiment._G), get_cultural_groups(experiment._population), convergence_its")
     
-    args.gridsize = process_range(args.gridsize)
     for gs in args.gridsize:
-        args.traits = process_range(args.traits)
         for t in args.traits:
-            args.features = process_range(args.features)
             for f in args.features:
                 width = gs
                 height = gs
