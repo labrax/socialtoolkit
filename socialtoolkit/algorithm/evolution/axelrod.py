@@ -5,15 +5,15 @@
 
 """
 
-from model import Model
-from util import overlap_similarity, get_different_trait_index
+from evolution_algorithm import EvolutionAlgorithm
+from ..analysis.util import overlap_similarity, get_different_trait_index
 
 import numpy.random as random
 from random import choice
 
 import networkx as nx
 
-class Axelrod(Model):
+class Axelrod(EvolutionAlgorithm):
     def __init__(self, G, population):
         super(Axelrod, self).__init__(G, population)
     def iterate(self):

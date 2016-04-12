@@ -5,13 +5,15 @@
 
 """
 
+from ..algorithm import Algorithm
+
 import networkx as nx
 
 from math import sqrt
 from numpy import random
 from random import choice
 
-class Model(object):
+class EvolutionAlgorithm(Algorithm):
     def __init__(self, G, population):
         self.G = G
         self.population = population

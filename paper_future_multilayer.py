@@ -7,16 +7,15 @@
 
 import networkx as nx
 
-from social_experiment import EqualMultilayerExperiment
-from convergence import Convergence
-from population import normal_distribution
-from expandable_model import ExpandableModel
-from analysis import CommandAnalysis, AmountIterationLayerAnalysis
+from socialtoolkit.social_experiment import EqualMultilayerExperiment
+from socialtoolkit.graph import normal_distribution
 
-from output_analysis import OutputAnalysis
+from socialtoolkit.algorithm import Convergence
+from socialtoolkit.algorithm.evolution import ExpandableAlgorithm
+from socialtoolkit.algorithm.analysis import CommandAnalysis, AmountIterationLayerAnalysis, OutputAnalysis
 
-from graph_util import get_grid_groups, fast_get_connected_components_len
-from util import get_cultural_groups_layer, get_cultural_groups, overlap_similarity_layer
+from socialtoolkit.algorithm.analysis.graph_util import get_grid_groups, fast_get_connected_components_len
+from socialtoolkit.algorithm.analysis.util import get_cultural_groups_layer, get_cultural_groups, overlap_similarity_layer
 
 from time import clock
 
@@ -34,9 +33,9 @@ if __name__ == "__main__":
     for i in range(layers):
         all_G.append((nx.grid_2d_graph, [width, height]))
     convergence = Convergence(max_iterations, step_check)
-    model = ExpandableModel
+    evolution_algorithm = ExpandableAlgorithm
     population = (normal_distribution, [width*height, features, traits])
-    experiment = EqualMultilayerExperiment(all_G, population, model, convergence, layers)
+    experiment = EqualMultilayerExperiment(all_G, population, evolution_algorithm, convergence, layers)
     
     analysis = [
         CommandAnalysis(0, step_analysis, fast_get_connected_components_len, [experiment.all_G[0]]),

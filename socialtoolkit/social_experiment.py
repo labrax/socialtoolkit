@@ -10,12 +10,12 @@ from Queue import PriorityQueue
 import numpy.random as random
 
 class Experiment(object):
-    def __init__(self, G, population, model, convergence):
+    def __init__(self, G, population, evolution_algorithm, convergence):
         if G:
             self._G = G[0](*G[1])
         self._population = population[0](*population[1])
-        if model:
-            self._model = model(self._G, self._population)
+        if evolution_algorithm:
+            self._model = evolution_algorithm(self._G, self._population)
         self._convergence = convergence
         self._queue = PriorityQueue()
     def add_analysis(self, analysis):
@@ -38,14 +38,14 @@ class Experiment(object):
         self.i = self.i + 1
 
 class EqualMultilayerExperiment(Experiment):
-    def __init__(self, G, population, model, convergence, layers):
+    def __init__(self, G, population, evolution_algorithm, convergence, layers):
         super(EqualMultilayerExperiment, self).__init__(None, population, None, convergence)
         self.all_G = []
         self.all_model = []
         for i in G:
             curr = i[0](*i[1])
             self.all_G.append(curr)
-            self.all_model.append(model(curr, self._population))
+            self.all_model.append(evolution_algorithm(curr, self._population))
         self._curr = [0]
     def converge(self):
         self.i = 1

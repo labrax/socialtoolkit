@@ -5,7 +5,9 @@
 
 """
 
-class AnalysisAlgorithm(object):
+from ..algorithm import Algorithm
+
+class AnalysisAlgorithm(Algorithm):
     pass
 
 class CommandAnalysis(AnalysisAlgorithm):

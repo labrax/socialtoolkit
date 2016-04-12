@@ -5,9 +5,9 @@
 
 """
 
-from model import Model
+from evolution_algorithm import EvolutionAlgorithm
 from centola import get_new_neighbor
-from util import overlap_similarity, get_different_trait_index
+from ..analysis.util import overlap_similarity, get_different_trait_index
 
 from math import sqrt
 
@@ -16,13 +16,13 @@ from random import choice
 
 import networkx as nx
 
-class ExpandableModel(Model):
+class ExpandableAlgorithm(EvolutionAlgorithm):
     def __init__(self, G, population):
-        super(ExpandableModel, self).__init__(G, population)
+        super(ExpandableAlgorithm, self).__init__(G, population)
         self._overlap_function = overlap_similarity
         self._post_args = None
     def iterate(self):
-        ret = super(ExpandableModel, self).pre_iteration()
+        ret = super(ExpandableAlgorithm, self).pre_iteration()
         if(ret == None):
             return None
         active, passive, neighbors, features_active, features_passive = ret

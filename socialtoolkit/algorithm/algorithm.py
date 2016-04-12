@@ -4,3 +4,6 @@
 """
 
 """
+
+class Algorithm(object):
+    pass
