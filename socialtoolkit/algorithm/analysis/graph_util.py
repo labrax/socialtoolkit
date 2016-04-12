@@ -9,7 +9,7 @@ import networkx as nx
 from math import sqrt
 import bisect
 
-def get_grid_groups(G, population):
+def get_grid_groups_axelrod(G, population):
     height = width = int(sqrt(len(nx.nodes(G))))
     
     amount_components = 0
