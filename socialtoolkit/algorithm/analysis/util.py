@@ -6,7 +6,6 @@
 """
 
 import numpy as np
-from sets import Set
 
 def overlap_similarity(features1, features2):
     """compute overlap similarity of features from 2 nodes"""
@@ -24,7 +23,7 @@ def get_different_trait_index(features1, features2):
             return test
 
 def get_cultural_groups(population):
-    checked = Set()
+    checked = set()
     for i in population:
         checked.add(tuple(i))
     return len(checked)
@@ -41,7 +40,7 @@ def overlap_similarity_layer(features1, features2, curr_layer, amount_layers):
 
 def get_cultural_groups_layer(population, curr_layer, amount_layers):
     layer_size = len(population[0])/amount_layers
-    checked = Set()
+    checked = set()
     for i in population:
         checked.add(tuple(i[layer_size*curr_layer:layer_size*(curr_layer+1)]))
     return len(checked)

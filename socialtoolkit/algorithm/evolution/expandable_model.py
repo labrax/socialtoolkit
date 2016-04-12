@@ -5,8 +5,8 @@
 
 """
 
-from evolution_algorithm import EvolutionAlgorithm
-from centola import get_new_neighbor
+from .evolution_algorithm import EvolutionAlgorithm
+from .centola import get_new_neighbor
 from ..analysis.util import overlap_similarity, get_different_trait_index
 
 from math import sqrt

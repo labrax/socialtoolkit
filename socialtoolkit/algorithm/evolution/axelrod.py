@@ -5,7 +5,7 @@
 
 """
 
-from evolution_algorithm import EvolutionAlgorithm
+from .evolution_algorithm import EvolutionAlgorithm
 from ..analysis.util import overlap_similarity, get_different_trait_index
 
 import numpy.random as random

@@ -2,7 +2,7 @@
 __version__ = 1
 __all__ = ["evolution_algorithm", "axelrod", "centola", "expandable_model"]
 
-from axelrod import Axelrod
-from centola import Centola
-from expandable_model import ExpandableAlgorithm
-from evolution_algorithm import EvolutionAlgorithm
+from .axelrod import Axelrod
+from .centola import Centola
+from .expandable_model import ExpandableAlgorithm
+from .evolution_algorithm import EvolutionAlgorithm

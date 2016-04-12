@@ -5,7 +5,7 @@
 
 """
 
-from Queue import PriorityQueue
+from queue import PriorityQueue
 
 import numpy.random as random
 

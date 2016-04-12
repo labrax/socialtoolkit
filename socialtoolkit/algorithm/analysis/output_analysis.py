@@ -6,8 +6,8 @@
 """
 
 import sys
-from Queue import PriorityQueue
-from analysis import AnalysisAlgorithm
+from queue import PriorityQueue
+from .analysis import AnalysisAlgorithm
 
 class OutputAnalysis:
     def __init__(self, analysis, headers=[], delimeter=', ', output=sys.stdout):
@@ -25,7 +25,7 @@ class OutputAnalysis:
             try:
                 self.output = open(output, "w")
             except Error as e:
-                print e, "thus using stdout"
+                print(e, "thus using stdout")
                 self.output = sys.stdout
         else:
             self.output = output
