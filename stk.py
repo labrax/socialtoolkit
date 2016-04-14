@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 """
@@ -17,6 +17,8 @@ from socialtoolkit.algorithm.analysis.graph_util import fast_get_connected_compo
 from socialtoolkit.algorithm.analysis.util import get_cultural_groups
 
 from socialtoolkit.social_experiment import Experiment
+
+from multiprocessing import Pool
 
 import networkx as nx
 
@@ -65,6 +67,8 @@ def process_range(val):
     return val
 
 def algorithm_name_for_algorithm(val):
+    if type(val) == list:
+        val = val[0]
     if val == 'axelrod':
         return Axelrod
     elif val == 'centola':
@@ -72,6 +76,23 @@ def algorithm_name_for_algorithm(val):
     else:
         print("Invalid name for algorithm '" + val + "'.", file=sys.stderr)
         exit(-1)
+
+def work(parameters):
+    width = parameters['width']
+    height = parameters['height']
+    features = parameters['features']
+    traits = parameters['traits']
+    max_iterations = parameters['max_iterations']
+    step_check = parameters['step_check']
+    
+    G = (nx.grid_2d_graph, [width, height])
+    convergence = Convergence(max_iterations, step_check)
+    evolution_algorithm = args.algorithm
+    population = (normal_distribution, [width*height, features, traits])
+    experiment = Experiment(G, population, evolution_algorithm, convergence)
+    
+    convergence_its = experiment.converge()
+    return (width, height, features, traits, max_iterations, step_check, fast_get_connected_components_len(experiment._G), get_cultural_groups(experiment._population), convergence_its)
 
 if __name__ == "__main__":
     args = process_args()
@@ -82,24 +103,36 @@ if __name__ == "__main__":
     
     args.algorithm = algorithm_name_for_algorithm(args.algorithm)
     
-    print("width, height, features, traits, max_iterations, step_check, fast_get_connected_components_len(experiment._G), get_cultural_groups(experiment._population), convergence_its")
+    if type(args.convergence_max_iterations) == list:
+        args.convergence_max_iterations = args.convergence_max_iterations[0]
+    if type(args.convergence_step_check) == list:
+        args.convergence_step_check = args.convergence_step_check[0]
+    
+    print("width height features traits max_iterations step_check physical_groups cultural_groups convergence_its")
+    
+    all_P = []
     
     for gs in args.gridsize:
         for t in args.traits:
             for f in args.features:
-                width = gs
-                height = gs
-                features = f
-                traits = t
-                max_iterations = args.convergence_max_iterations
-                step_check = args.convergence_step_check
+                parameters = {}
+                parameters['width'] = gs
+                parameters['height'] = gs
+                parameters['features'] = f
+                parameters['traits'] = t
+                parameters['max_iterations'] = args.convergence_max_iterations
+                parameters['step_check'] = args.convergence_step_check
+                all_P.append(parameters)
                 
-                G = (nx.grid_2d_graph, [width, height])
-                convergence = Convergence(max_iterations, step_check)
-                evolution_algorithm = args.algorithm
-                population = (normal_distribution, [width*height, features, traits])
-                experiment = Experiment(G, population, evolution_algorithm, convergence)
-                
-                convergence_its = experiment.converge()
-                print(width, height, features, traits, max_iterations, step_check, fast_get_connected_components_len(experiment._G), get_cultural_groups(experiment._population), convergence_its)
-    
+    pool = Pool(processes=8)
+    result = pool.map(work, all_P)
+    pool.close()
+    pool.join()
+    for i in result:
+        if result == None:
+            print("invalid value", file=sys.stderr)
+        else:
+            output = ""
+            for e in i:
+                output += str(e) + " "
+            print(output)
