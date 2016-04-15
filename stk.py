@@ -7,6 +7,19 @@
 
 from __future__ import print_function
 
+import sys
+"""
+sys.path.append("/userdata/vroth")
+sys.path.append("/serverdata/userdata/vroth")
+sys.path.append("/userdata/vroth/dist-packages")
+sys.path.append("/serverdata/userdata/vroth/dist-packages")
+"""
+sys.path.append("/clusterdata/spark/spark-1.6.0-bin-hadoop2.6/python")
+
+import os
+os.environ['SPARK_HOME'] = "/clusterdata/spark/spark-1.6.0-bin-hadoop2.6"
+os.environ["PYSPARK_PYTHON"] = "/userdata/vroth/stk_env/bin/python" ############## MUST BE RUN AS EXPORT OUTSIDE!
+
 from socialtoolkit.graph import normal_distribution
 
 from socialtoolkit.algorithm import Convergence
@@ -22,7 +35,6 @@ from multiprocessing import Pool
 import networkx as nx
 
 import argparse
-import sys
 
 def process_args():
     parser = argparse.ArgumentParser(
@@ -110,6 +122,7 @@ def work(parameters):
     convergence_its = experiment.converge()
     if layers > 1:
         experiment._G = nx.compose_all(experiment.all_G)
+    #print(evolution_algorithm.__name__, width, height, layers, features, traits, max_iterations, step_check, fast_get_connected_components_len(experiment._G), get_cultural_groups(experiment._population), convergence_its, file=sys.stderr)
     return (evolution_algorithm.__name__, width, height, layers, features, traits, max_iterations, step_check, fast_get_connected_components_len(experiment._G), get_cultural_groups(experiment._population), convergence_its)
 
 if __name__ == "__main__":
@@ -151,16 +164,22 @@ if __name__ == "__main__":
                 all_P.append(parameters)
     
     if args.spark == True:
+        #os.system("rm socialtoolkit.zip")
+        #os.system("zip -r socialtoolkit *")
         from pyspark import SparkContext, SparkConf
         from time import time
         conf = SparkConf().setAppName("social_simulations_" + str(time())).setMaster("spark://10.1.1.28:7077")
         sc = SparkContext(conf=conf)
-        ratios_RDD = sc.parallelize(all_P)
-        results = ratios_RDD.map(work)
-        results.collect()
+        sc.addPyFile("util/socialtoolkit.zip")
+        #sc.addPyFile("util/networkx.zip")
+        #sc.addPyFile("util/decorator.py")
+        #sc.addPyFile("util/numpy.zip")
+        ratios_RDD = sc.parallelize(all_P, 100)
+        prepared_work = ratios_RDD.map(work)
+        result = prepared_work.collect()
         
         for i in result:
-            if result == None:
+            if i == None:
                 print("invalid value", file=sys.stderr)
             else:
                 output = ""
