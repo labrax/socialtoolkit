@@ -33,7 +33,7 @@ def overlap_similarity_layer(features1, features2, curr_layer, amount_layers):
     """compute overlap similarity of features from 2 nodes"""
     layer_size = len(features1)/amount_layers
     sum = 0
-    for i in range(layer_size*curr_layer, layer_size*(curr_layer+1)):
+    for i in range(int(layer_size*curr_layer), int(layer_size*(curr_layer+1))):
         if features1[i] == features2[i]:
             sum += 1
     return sum/float(len(features1)/amount_layers)
