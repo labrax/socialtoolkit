@@ -13,7 +13,7 @@ from socialtoolkit.graph import normal_distribution
 from socialtoolkit.algorithm import Convergence
 from socialtoolkit.algorithm.evolution import Axelrod
 from socialtoolkit.algorithm.evolution import Centola
-from socialtoolkit.algorithm.evolution import ExpandableAlgorithm
+from socialtoolkit.algorithm.evolution import ExpandableCentolaAlgorithm
 from socialtoolkit.algorithm.analysis import CommandAnalysis
 
 from socialtoolkit.algorithm.analysis.graph_util import get_grid_groups

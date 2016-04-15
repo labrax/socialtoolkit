@@ -16,13 +16,13 @@ from random import choice
 
 import networkx as nx
 
-class ExpandableAlgorithm(EvolutionAlgorithm):
+class ExpandableCentolaAlgorithm(EvolutionAlgorithm):
     def __init__(self, G, population):
-        super(ExpandableAlgorithm, self).__init__(G, population)
+        super(ExpandableCentolaAlgorithm, self).__init__(G, population)
         self._overlap_function = overlap_similarity
         self._post_args = None
     def iterate(self):
-        ret = super(ExpandableAlgorithm, self).pre_iteration()
+        ret = super(ExpandableCentolaAlgorithm, self).pre_iteration()
         if(ret == None):
             return None
         active, passive, neighbors, features_active, features_passive = ret

@@ -11,10 +11,10 @@ from socialtoolkit.social_experiment import EqualMultilayerExperiment
 from socialtoolkit.graph import normal_distribution
 
 from socialtoolkit.algorithm import Convergence
-from socialtoolkit.algorithm.evolution import ExpandableAlgorithm
+from socialtoolkit.algorithm.evolution import ExpandableCentolaAlgorithm
 from socialtoolkit.algorithm.analysis import CommandAnalysis, AmountIterationLayerAnalysis, OutputAnalysis
 
-from socialtoolkit.algorithm.analysis.graph_util import get_grid_groups, fast_get_connected_components_len
+from socialtoolkit.algorithm.analysis.graph_util import fast_get_connected_components_len, fast_get_connected_components_len
 from socialtoolkit.algorithm.analysis.util import get_cultural_groups_layer, get_cultural_groups, overlap_similarity_layer
 
 from time import clock
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     for i in range(layers):
         all_G.append((nx.grid_2d_graph, [width, height]))
     convergence = Convergence(max_iterations, step_check)
-    evolution_algorithm = ExpandableAlgorithm
+    evolution_algorithm = ExpandableCentolaAlgorithm
     population = (normal_distribution, [width*height, features, traits])
     experiment = EqualMultilayerExperiment(all_G, population, evolution_algorithm, convergence, layers)
     
