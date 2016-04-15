@@ -6,7 +6,10 @@
 """
 
 import sys
-from queue import PriorityQueue
+try:
+    from queue import PriorityQueue
+except:
+    from Queue import PriorityQueue
 from .analysis import AnalysisAlgorithm
 
 class OutputAnalysis:

@@ -5,8 +5,11 @@
 
 """
 
-from queue import PriorityQueue
-
+import sys
+try:
+    from queue import PriorityQueue
+except:
+    from Queue import PriorityQueue
 import numpy.random as random
 
 class Experiment(object):

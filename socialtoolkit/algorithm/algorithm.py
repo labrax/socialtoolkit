@@ -6,4 +6,5 @@
 """
 
 class Algorithm(object):
-    pass
+    def __lt__(self, other):
+        return id(self) < id(other)
