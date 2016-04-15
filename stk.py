@@ -14,8 +14,8 @@ from socialtoolkit.graph import normal_distribution
 from socialtoolkit.algorithm import Convergence
 from socialtoolkit.algorithm.evolution import Axelrod, Centola, ExpandableCentolaAlgorithm
 
-from socialtoolkit.algorithm.analysis.graph_util import fast_get_connected_components_len
-from socialtoolkit.algorithm.analysis.util import get_cultural_groups, overlap_similarity_layer
+from socialtoolkit.algorithm.analysis.graph_util import fast_get_connected_components_len, fast_get_connected_components
+from socialtoolkit.algorithm.analysis.util import get_cultural_groups, get_cultural_groups_layer, overlap_similarity_layer
 
 from socialtoolkit.social_experiment import Experiment, EqualMultilayerExperiment
 
@@ -110,11 +110,18 @@ def work(parameters):
         experiment = Experiment(G, population, evolution_algorithm, convergence)
         
     convergence_its = experiment.converge()
-    end = time()
+    layers_output = " "
     if layers > 1:
         experiment._G = nx.compose_all(experiment.all_G)
+        for i in range(0, layers):
+            if i == 0:
+                layers_output = ""
+            if i > 0:
+                layers_output += " "
+            layers_output += str(fast_get_connected_components_len(experiment.all_G[i])) + " " + str(fast_get_connected_components(experiment.all_G[i])[0]) + " " + str(get_cultural_groups_layer(experiment._population, i, layers))
+    end = time()
     #print(evolution_algorithm.__name__, width, height, layers, features, traits, max_iterations, step_check, fast_get_connected_components_len(experiment._G), get_cultural_groups(experiment._population), convergence_its, (end-start), file=sys.stderr)
-    return (evolution_algorithm.__name__, width, height, layers, features, traits, max_iterations, step_check, fast_get_connected_components_len(experiment._G), get_cultural_groups(experiment._population), convergence_its, (end-start))
+    return (evolution_algorithm.__name__, width, height, layers, features, traits, max_iterations, step_check, fast_get_connected_components(experiment._G)[0], fast_get_connected_components_len(experiment._G), get_cultural_groups(experiment._population), layers_output, convergence_its, (end-start))
 
 if __name__ == "__main__":
     args = process_args()
@@ -135,7 +142,11 @@ if __name__ == "__main__":
         print("More than 1 layers must use Centola!", file=sys.stderr)
         exit(-1)
     
-    print("algo width height layers features traits max_iterations step_check physical_groups cultural_groups convergence_its convergence_time")
+    layers_output = " "
+    if args.layers > 1:
+        for i in range(0, args.layers):
+            layers_output += str(i) + "_physycal_groups " + str(i) + "_biggest_physical_group " + str(i) + "_cultural_groups "
+    print("algo width height layers features traits max_iterations step_check biggest_physical_group physical_groups cultural_groups" + layers_output + "convergence_its convergence_time")
     
     all_P = []
     
@@ -169,6 +180,8 @@ if __name__ == "__main__":
             else:
                 output = ""
                 for e in i:
+                    if e == "" or e == None:
+                        continue
                     output += str(e) + " "
                 print(output)
     else:
