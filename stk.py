@@ -8,17 +8,6 @@
 from __future__ import print_function
 
 import sys
-"""
-sys.path.append("/userdata/vroth")
-sys.path.append("/serverdata/userdata/vroth")
-sys.path.append("/userdata/vroth/dist-packages")
-sys.path.append("/serverdata/userdata/vroth/dist-packages")
-"""
-sys.path.append("/clusterdata/spark/spark-1.6.0-bin-hadoop2.6/python")
-
-import os
-os.environ['SPARK_HOME'] = "/clusterdata/spark/spark-1.6.0-bin-hadoop2.6"
-os.environ["PYSPARK_PYTHON"] = "/userdata/vroth/stk_env/bin/python" ############## MUST BE RUN AS EXPORT OUTSIDE!
 
 from socialtoolkit.graph import normal_distribution
 
@@ -30,7 +19,7 @@ from socialtoolkit.algorithm.analysis.util import get_cultural_groups, overlap_s
 
 from socialtoolkit.social_experiment import Experiment, EqualMultilayerExperiment
 
-from multiprocessing import Pool
+from time import time
 
 import networkx as nx
 
@@ -95,6 +84,7 @@ def algorithm_name_for_algorithm(val):
 
 #@profile
 def work(parameters):
+    start = time()
     width = parameters['width']
     height = parameters['height']
     features = parameters['features']
@@ -120,10 +110,11 @@ def work(parameters):
         experiment = Experiment(G, population, evolution_algorithm, convergence)
         
     convergence_its = experiment.converge()
+    end = time()
     if layers > 1:
         experiment._G = nx.compose_all(experiment.all_G)
-    #print(evolution_algorithm.__name__, width, height, layers, features, traits, max_iterations, step_check, fast_get_connected_components_len(experiment._G), get_cultural_groups(experiment._population), convergence_its, file=sys.stderr)
-    return (evolution_algorithm.__name__, width, height, layers, features, traits, max_iterations, step_check, fast_get_connected_components_len(experiment._G), get_cultural_groups(experiment._population), convergence_its)
+    #print(evolution_algorithm.__name__, width, height, layers, features, traits, max_iterations, step_check, fast_get_connected_components_len(experiment._G), get_cultural_groups(experiment._population), convergence_its, (end-start), file=sys.stderr)
+    return (evolution_algorithm.__name__, width, height, layers, features, traits, max_iterations, step_check, fast_get_connected_components_len(experiment._G), get_cultural_groups(experiment._population), convergence_its, (end-start))
 
 if __name__ == "__main__":
     args = process_args()
@@ -144,7 +135,7 @@ if __name__ == "__main__":
         print("More than 1 layers must use Centola!", file=sys.stderr)
         exit(-1)
     
-    print("algo width height layers features traits max_iterations step_check physical_groups cultural_groups convergence_its")
+    print("algo width height layers features traits max_iterations step_check physical_groups cultural_groups convergence_its convergence_time")
     
     all_P = []
     
@@ -164,17 +155,11 @@ if __name__ == "__main__":
                 all_P.append(parameters)
     
     if args.spark == True:
-        #os.system("rm socialtoolkit.zip")
-        #os.system("zip -r socialtoolkit *")
         from pyspark import SparkContext, SparkConf
-        from time import time
         conf = SparkConf().setAppName("social_simulations_" + str(time())).setMaster("spark://10.1.1.28:7077")
         sc = SparkContext(conf=conf)
         sc.addPyFile("util/socialtoolkit.zip")
-        #sc.addPyFile("util/networkx.zip")
-        #sc.addPyFile("util/decorator.py")
-        #sc.addPyFile("util/numpy.zip")
-        ratios_RDD = sc.parallelize(all_P, 100)
+        ratios_RDD = sc.parallelize(all_P, len(all_P))
         prepared_work = ratios_RDD.map(work)
         result = prepared_work.collect()
         
@@ -192,6 +177,7 @@ if __name__ == "__main__":
             amount_process = 8
 
         if amount_process > 1:
+            from multiprocessing import Pool
             pool = Pool(processes=amount_process)
             result = pool.map(work, all_P)
             pool.close()
