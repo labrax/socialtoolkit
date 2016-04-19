@@ -119,6 +119,8 @@ def work(parameters):
             if i > 0:
                 layers_output += " "
             layers_output += str(fast_get_connected_components_len(experiment.all_G[i])) + " " + str(fast_get_connected_components(experiment.all_G[i])[0]) + " " + str(get_cultural_groups_layer(experiment._population, i, layers))
+    else:
+        layers_output = ""
     end = time()
     #print(evolution_algorithm.__name__, width, height, layers, features, traits, max_iterations, step_check, fast_get_connected_components_len(experiment._G), get_cultural_groups(experiment._population), convergence_its, (end-start), file=sys.stderr)
     return (evolution_algorithm.__name__, width, height, layers, features, traits, max_iterations, step_check, fast_get_connected_components(experiment._G)[0], fast_get_connected_components_len(experiment._G), get_cultural_groups(experiment._population), layers_output, convergence_its, (end-start))
@@ -201,11 +203,15 @@ if __name__ == "__main__":
                 else:
                     output = ""
                     for e in i:
+                        if e == "" or e == None:
+                            continue
                         output += str(e) + " "
                     print(output)
         else:
             result = work(all_P[0])
             output = ""
             for e in result:
+                if e == "" or e == None:
+                    continue
                 output += str(e) + " "
             print(output)
