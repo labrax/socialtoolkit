@@ -1,3 +1,12 @@
+## Install Dependencies
+pip install networkx
+
+
+## Running
+Example
+``python stk.py --traits=10 --features=10 --gridsize=10
+
+
 ====== SPARK USE ======
 1. Configure spark
     Install spark with a default folder path
