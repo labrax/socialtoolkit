@@ -1,10 +1,13 @@
+# socialtoolkit
+Toolkit for the simulation of models of social contagion and cultural dissemination in multilayered systems.
+
 ## Install Dependencies
-pip install networkx
+> pip install networkx
 
 
 ## Running
 Example
-``python stk.py --traits=10 --features=10 --gridsize=10
+> python stk.py --traits=10 --features=10 --gridsize=10
 
 
 ====== SPARK USE ======
