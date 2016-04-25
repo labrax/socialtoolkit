@@ -12,7 +12,7 @@ import sys
 from socialtoolkit.graph import normal_distribution
 
 from socialtoolkit.algorithm import Convergence
-from socialtoolkit.algorithm.evolution import Axelrod, Centola, ExpandableCentolaAlgorithm
+from socialtoolkit.algorithm.evolution import Axelrod, Centola, MultilayerAxelrod, MultilayerCentola
 
 from socialtoolkit.algorithm.analysis.graph_util import fast_get_connected_components_len, fast_get_connected_components
 from socialtoolkit.algorithm.analysis.util import get_cultural_groups, get_cultural_groups_layer, overlap_similarity_layer
@@ -74,6 +74,7 @@ def process_range(val):
 def algorithm_name_for_algorithm(val):
     if type(val) == list:
         val = val[0]
+    val = val.lower()
     if val == 'axelrod':
         return Axelrod
     elif val == 'centola':
@@ -97,7 +98,10 @@ def work(parameters):
     population = (normal_distribution, [width*height, features, traits])
     
     if layers > 1:
-        evolution_algorithm = ExpandableCentolaAlgorithm
+        if args.algorithm == Centola:
+            evolution_algorithm = MultilayerCentola
+        else:
+            evolution_algorithm = MultilayerAxelrod
         all_G = []
         for i in range(layers):
             all_G.append((nx.grid_2d_graph, [width, height]))
@@ -140,9 +144,6 @@ if __name__ == "__main__":
         args.convergence_step_check = args.convergence_step_check[0]
     if type(args.layers) == list:
         args.layers = args.layers[0]
-    if args.layers > 1 and args.algorithm == Axelrod:
-        print("More than 1 layers must use Centola!", file=sys.stderr)
-        exit(-1)
     
     layers_output = " "
     if args.layers > 1:
