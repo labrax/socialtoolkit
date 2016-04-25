@@ -50,3 +50,11 @@ ratios_RDD = sc.parallelize(all_P, 10000) # divide the work on 10000 (changes on
 prepared_work = ratios_RDD.map(work) # work is the function
 result = prepared_work.collect() #get the result as a list
 ```
+
+# TODO
+[ ] range for layer range
+[ ] change spark directory (optional argument)
+[ ] document code
+[ ] size of the largest cultural group
+[ ] fix methods name on util / graph_util
+[ ] mean value for tests
