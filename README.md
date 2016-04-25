@@ -24,12 +24,14 @@ pip install networkx
 ```
 4. Put the created folder on the common directory (in my case /userdata/vroth)
 5. Configure the needed dependencies for the running machine
- > pip install py4j
+  > pip install py4j
 
 ### Before running
- ```export SPARK_HOME=/clusterdata/spark/spark-1.6.0-bin-hadoop2.6
+ ```
+export SPARK_HOME=/clusterdata/spark/spark-1.6.0-bin-hadoop2.6
 export PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/build:$PYTHONPATH
-export PYSPARK_PYTHON=/userdata/vroth/stk_env/bin/python```
+export PYSPARK_PYTHON=/userdata/vroth/stk_env/bin/python
+```
 
 ### Running with Spark
   > ./stk.py --spark
