@@ -39,31 +39,48 @@ def process_args():
         help='a range for the traits')
     parser.add_argument('-f', '--features', metavar='N', default=5, type=int, nargs='+',
         help='a range for the features')
+    parser.add_argument('-l', '--layers', metavar='N', default=1, type=int, nargs=1,
+        help='a number of layers')
+    parser.add_argument('-A', '--algorithm', metavar='<algorithm>', default="axelrod", type=str, nargs=1,
+        help='an simulation algorithm, "axelrod" or "centola"')
+    
+    #convergence settings
     parser.add_argument('-cI', '--convergence-max-iterations', metavar='N', default=0, type=int, nargs=1,
         help='maximum number of iterations')
     parser.add_argument('-cS', '--convergence-step-check', metavar='N', default=10**4, type=int, nargs=1,
         help='step for convergence check')
-    parser.add_argument('-A', '--algorithm', metavar='<algorithm>', default="axelrod", type=str, nargs=1,
-        help='an simulation algorithm, "axelrod" or "centola"')
-    parser.add_argument('-l', '--layers', metavar='N', default=1, type=int, nargs=1,
-        help='a number of layers')
+    
+    #multithreading
     parser.add_argument('--spark', metavar='SPARK', const="spark://10.1.1.28:7077", type=str, nargs='?',
         help='connect using spark')
     parser.add_argument('--threads', metavar='THREADS', default=cpu_count(), type=int, nargs=1,
         help='set the number of threads - default on this machine ' + str(cpu_count()))
-    """
-    parser.add_argument('-aR', '--analysisinterval', metavar='N', type=int, nargs='+',
-                    help='an interval for the analysis')
-    parser.add_argument('-p', '--physical', metavar='p', dest='calculate_physical',
+    
+    #analysis
+    parser.add_argument('-p', '--physical', metavar='P', dest='physical',
         action='store_const', const=True, default=False,
         help='calculate the number of physical groups')
-    parser.add_argument('-c', '--cultural', metavar='c', dest='calculate_cultural',
+    parser.add_argument('-c', '--cultural', metavar='C', dest='cultural',
         action='store_const', const=True, default=False,
         help='calculate the number of cultural groups')
+    parser.add_argument('-Bp', '--biggest-physical', metavar='BP', dest='biggest_physical',
+        action='store_const', const=False, default=True,
+        help='calculate the size of biggest physical groups')
+    parser.add_argument('-Bc', '--biggest-cultural', metavar='BC', dest='biggest_cultural',
+        action='store_const', const=False, default=True,
+        help='calculate the size of biggest cultural groups')
+    parser.add_argument('-DA', '--dont-analyse-layer-by-layer', metavar='DA', dest='no_layer_by_layer',
+        action='store_const', const=True, default=False,
+        help='don\'t calculate the analysis for individual layers - if on multilayer')
+    parser.add_argument('-SA', '--analysis-step', metavar='N', const=sys.maxsize, type=int, nargs=1,
+        help='an interval for the analysis')
+    
+    """
+    parser.add_argument('-aO', '--analysis-output', metavar='<output file>', type=str, nargs='+',
+        help='the output for analysis')
+
     parser.add_argument('-aA', '--analysisalgorithm', metavar='<algorithm name>', type=str, nargs='+',
-                    help='the algorithms for analysis')
-    parser.add_argument('-aO', '--analysisoutput', metavar='<output file>', type=str, nargs='+',
-                    help='the output for analysis')
+        help='the algorithms for analysis')
     """
     args = parser.parse_args()
     return args
