@@ -48,13 +48,16 @@ def overlap_similarity_layer(features1, features2, curr_layer, amount_layers):
         features1 (list): list of traits values from a node.
         features2 (list): list of traits values from another node.
         curr_layer (int): the current layer being operated.
-        amount_layers (int): the total amount of layers."""
+        amount_layers (int): the total amount of layers.
+        
+    Note:
+        The behaviour becomes strange for non-divisible number of features by amount of layers."""
     layer_size = len(features1)/amount_layers
     sum = 0
     for i in range(int(layer_size*curr_layer), int(layer_size*(curr_layer+1))):
         if features1[i] == features2[i]:
             sum += 1
-    return sum/float(len(features1)/amount_layers)
+    return sum/(float(len(features1))/amount_layers)
 
 def get_cultural_groups_layer(population, curr_layer, amount_layers):
     """Returns the amount of cultural groups considering only a layer.
