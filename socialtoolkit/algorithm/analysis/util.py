@@ -7,6 +7,9 @@ This source defines analysis operation that aren't related to graphs.
 
 import numpy as np
 
+def deprecated(func, **param):
+    raise DeprecationWarning(func.__name__ + " is deprecated, update code.")
+
 def overlap_similarity(features1, features2):
     """Returns the overlap similarity from features of 2 nodes.
     
@@ -30,6 +33,7 @@ def get_different_trait_index(features1, features2):
         if(features1[test] != features2[test]):
             return test
 
+@deprecated
 def get_cultural_groups(population):
     """Returns the amount of cultural groups.
     
@@ -39,6 +43,26 @@ def get_cultural_groups(population):
     for i in population:
         checked.add(tuple(i))
     return len(checked)
+
+def _cultural_groups(population):
+    checked = {}
+    for i in population:
+        checked[i] = checked.get(tuple(i), 0) + 1
+    return checked
+    
+def get_size_biggest_cultural_groups(population):
+    """Returns the size of the biggest cultural group.
+    
+    Args:
+        population (list of list): the features and traits of the population."""
+    return max(_cultural_groups(population).values())
+
+def get_amount_cultural_groups(population):
+    """Returns the amount of cultural groups.
+    
+    Args:
+        population (list of list): the features and traits of the population."""
+    return len(_cultural_groups(population))
 
 ###### MULTIPLE LAYERS #####
 def overlap_similarity_layer(features1, features2, curr_layer, amount_layers):
@@ -59,6 +83,7 @@ def overlap_similarity_layer(features1, features2, curr_layer, amount_layers):
             sum += 1
     return sum/(float(len(features1))/amount_layers)
 
+@deprecated
 def get_cultural_groups_layer(population, curr_layer, amount_layers):
     """Returns the amount of cultural groups considering only a layer.
     
@@ -71,3 +96,28 @@ def get_cultural_groups_layer(population, curr_layer, amount_layers):
     for i in population:
         checked.add(tuple(i[layer_size*curr_layer:layer_size*(curr_layer+1)]))
     return len(checked)
+    
+def _cultural_groups_layer(population, curr_layer, amount_layers):
+    layer_size = len(population[0])/amount_layers
+    checked = {}
+    for i in population:
+        checked[tuple(i[layer_size*curr_layer:layer_size*(curr_layer+1)])] = checked.get(tuple(i[layer_size*curr_layer:layer_size*(curr_layer+1)]), 0) + 1
+    return checked
+    
+def get_size_biggest_cultural_groups_layer(population, curr_layer, amount_layers):
+    """Returns the size of the biggest cultural group considering only a layer.
+    
+    Args:
+        population (list of list): the features and traits of the population.
+        curr_layer (int): the current layer being operated.
+        amount_layers (int): the total amount of layers."""
+    return max(_cultural_groups_layer(population, curr_layer, amount_layers).values())
+
+def get_amount_cultural_groups_layer(population, curr_layer, amount_layers):
+    """Returns the amount of cultural groups considering only a layer.
+    
+    Args:
+        population (list of list): the features and traits of the population.
+        curr_layer (int): the current layer being operated.
+        amount_layers (int): the total amount of layers."""
+    return len(_cultural_groups_layer(population, curr_layer, amount_layers))
