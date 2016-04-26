@@ -1,2 +1,3 @@
 *.pyc
 /util/stk_env/*
+*.py~
