@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-
+The source has the initializer for running the socialtoolkit.
 """
 
 from __future__ import print_function
@@ -26,6 +26,7 @@ import networkx as nx
 import argparse
 
 def process_args():
+    """Return the processed arguments."""
     parser = argparse.ArgumentParser(
         description='Execute a simulation for a generated network and properties using a social algorithm. The ranges can be written as values to iterate in between (2 or 3 arguments) or as a list of elements.')
     parser.add_argument('-gs', '--gridsize', metavar='N', default=32, type=int, nargs='+',
@@ -63,6 +64,10 @@ def process_args():
     return args
 
 def process_range(val):
+    """Returns a list for given program arguments.
+    
+    Args:
+        val (list or int): the input parameters as specified from argparse."""
     if type(val) is not list:
         return [val]
     if len(val) == 2:
@@ -72,6 +77,10 @@ def process_range(val):
     return val
 
 def algorithm_name_for_algorithm(val):
+    """Returns the algorithm function for the program argument.
+    
+    Args:
+        val (str or list): the name of the class."""
     if type(val) == list:
         val = val[0]
     val = val.lower()
@@ -83,8 +92,11 @@ def algorithm_name_for_algorithm(val):
         print("Invalid name for algorithm '" + val + "'.", file=sys.stderr)
         exit(-1)
 
-#@profile
 def work(parameters):
+    """Returns the simulation for a given parameter dictionary.
+    
+    Args:
+        parameters (dict): with integers width, height, features, traits, max_iterations, step_check and layers."""
     start = time()
     width = parameters['width']
     height = parameters['height']

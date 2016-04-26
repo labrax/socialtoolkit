@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-
+This source defines analysis operation that are mainly related to graphs.
 """
 
 import networkx as nx
@@ -10,6 +10,11 @@ from math import sqrt
 import bisect
 
 def get_grid_groups_axelrod(G, population):
+    """Returns the amount of cultural groups for a grid in relation to its neighbors.
+    
+    Args:
+        G (networkx.classes.graph): the graph.
+        population (list of list): the features and traits of the population."""
     height = width = int(sqrt(len(nx.nodes(G))))
     
     amount_components = 0
@@ -37,11 +42,14 @@ def get_grid_groups_axelrod(G, population):
             if isequal1 is False and isequal2 is False and isequal3 is False:
                 amount_components += 1
     return amount_components
-            
 ###### MODIFIED FROM NETWORKX ######
 #from nx.algorithms.components.connected
 def _plain_bfs(G, source):
-    """A fast BFS node generator"""
+    """Returns the amount of nodes explored and the nodes seen from a source node using BFS.
+    
+    Args:
+        G (networkx.classes.graph): the graph.
+        source (networkx.classes.nodes): the source node."""
     seen = set()
     amt = 0
     nextlevel = {source}
@@ -55,7 +63,10 @@ def _plain_bfs(G, source):
                 nextlevel.update(G[v])
     return (amt, seen)
 def fast_get_connected_components(G):
-    """optmized code to get the number of connected components"""
+    """Returns a list with the sizes of each physical group.
+    
+    Args:
+        G (networkx.classes.graph): the graph."""
     sizes = []
     seen = set()
     for v in G:
@@ -65,9 +76,18 @@ def fast_get_connected_components(G):
             seen.update(c)
     return sizes
 def fast_get_connected_components_len(G):
+    """Return the amount of physical groups.
+    
+    Args:
+        G (networkx.classes.graph): the graph."""
     return len(fast_get_connected_components(G))
 def has_path(G, node1, node2):
-    """return true if there is a path in G between 2 nodes"""
+    """Returns True if there is a path between 2 nodes.
+    
+    Args:
+        G (networkx.classes.graph): the graph.
+        node1 (networkx.classes.nodes): the source node.
+        node2 (networkx.classes.nodes): the target node."""
     try:
         nx.algorithms.shortest_paths._bidirectional_pred_succ(G, node1, node2)
         return True

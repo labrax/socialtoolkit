@@ -54,7 +54,13 @@ result = prepared_work.collect() #get the result as a list
 # TODO
 - [ ] range for layer range
 - [ ] change spark directory (optional argument)
-- [ ] document code
+- [X] document code
+- [ ] use socialtoolkit.graph.graph
+- [ ] debug?
 - [ ] size of the largest cultural group
+- [ ] size of the largest cultural group for each layer
 - [ ] fix methods name on util / graph_util
 - [ ] mean value for tests
+
+##### Source documenting
+- Based on [Google's](http://sphinxcontrib-napoleon.readthedocs.org/en/latest/example_google.html)

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-
+This source defines a unified class for output printing with variable arguments.
 """
 
 import sys
@@ -13,18 +13,27 @@ except:
 from .analysis import AnalysisAlgorithm
 
 class OutputAnalysis:
+    """Class for output of analysis"""
     def __init__(self, analysis, headers=[], delimeter=', ', output=sys.stdout):
+        """Args:
+            analysis (list/AnalysisAlgorithm instance or list of AnalysisAlgorithm instances): the analysis ran.
+            headers (list of str): the name for each output column.
+            delimeter (Optional[str]): the delimeter for the output.
+            output (file name or channel): the output file or channel.
+            
+        Note:
+            If the output filename is a file that already exists it will be removed and re-created."""
         self.analysis = []
-        if type(analysis) == type([]) and isinstance(analysis[0], AnalysisAlgorithm):
+        if type(analysis) == type([]) and isinstance(analysis[0], AnalysisAlgorithm): #many analysis
             for i in analysis:
                 self.analysis.append(i.get_results())
-        elif isinstance(analysis, AnalysisAlgorithm):
+        elif isinstance(analysis, AnalysisAlgorithm): #only one analysis
             self.analysis = analysis.get_results()
-        else:
+        else: #is a list of results
             self.analysis = analysis
         self.headers = headers
         self.delimeter = delimeter
-        if type(output) == type(str()):
+        if type(output) == type(str()): #if is a string name opens the file for writing
             try:
                 self.output = open(output, "w")
             except Error as e:
@@ -33,17 +42,19 @@ class OutputAnalysis:
         else:
             self.output = output
     def __exit__(self):
+        """Upon exit close file handler if needed."""
         if type(self.output).__name__ == 'file':
             self.output.close()
     def write(self):
-        if type(self.headers) == type(str()):
+        """Print all output."""
+        if type(self.headers) == type(str()): #if the header is a str
             self.output.write(str(self.headers) + '\n')
-        elif self.headers: #as string of functions
-            if type(self.headers[0]) == type(str()):
+        elif self.headers:
+            if type(self.headers[0]) == type(str()): #or as list of string
                 output = self.headers[0]
-            else:
+            else: #or as list of functions
                 output = self.headers[0].__name__
-            for h in self.headers[1:]:
+            for h in self.headers[1:]: #the remaining of the list
                 if type(h) == type(str()):
                     output += self.delimeter + h
                 else:
@@ -61,7 +72,7 @@ class OutputAnalysis:
                 queue.put((self.analysis[a][0][0], a, 0))
                 if curr_index > self.analysis[a][0][0]:
                     curr_index = self.analysis[a][0][0]
-            while not queue.empty():
+            while not queue.empty(): #print all the values, filling with previous data
                 e = queue.get()
                 if e[0] != curr_index:
                     self.output.write(str(curr_index) + self.delimeter + self.delimeter.join(curr_values) + '\n')

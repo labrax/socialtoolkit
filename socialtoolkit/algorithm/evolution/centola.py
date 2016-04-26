@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-
+This source defines the Centolas's algorithm for cultural drift and diffusion.
 """
 
 from .evolution_algorithm import EvolutionAlgorithm
@@ -14,9 +14,16 @@ from random import choice
 import networkx as nx
 
 class Centola(EvolutionAlgorithm):
+    """Algorithm for evolution as proposed on Centola's paper for cultural drift and diffusion"""
     def __init__(self, G, population):
+        """Initiates the algorithm with default settings.
+        
+        Args:
+            G (networkx.classes.graph): the graph.
+            population (list of list): the features and traits of the population."""
         super(Centola, self).__init__(G, population)
     def iterate(self):
+        """Iterate once using this algorithm"""
         active, passive, neighbors, features_active, features_passive = super(Centola, self).pre_iteration()
         s = overlap_similarity(features_active, features_passive)
         if s > 0 and s < 1:
@@ -31,7 +38,11 @@ class Centola(EvolutionAlgorithm):
             return True
         
 def get_new_neighbor(G, neighbors):
-    """get a node from graph that isn't in neighbours: this method supposes that graph is always greater than neighbours"""
+    """Returns a node from the graph that isn't in neighbors: this method supposes that graph is always greater than neighbours.
+    
+    Args:
+        G (networkx.classes.graph): the graph.
+        neighbors (list): list of neighbors from a node."""
     while True:
         test_case = G[random.randint(len(G))]
         if test_case not in neighbors:
