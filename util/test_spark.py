@@ -38,13 +38,16 @@ def job2(x):
     import numpy as np
     import networkx as nx
     return (np.random.random())
+
+def job3(x):
+    return x*x
     
 conf = SparkConf().setAppName("testing_python_versions").setMaster("spark://10.1.1.28:7077")
 
 sc = SparkContext(conf=conf)
 
-ratios_RDD = sc.parallelize(range(0, 36), 36)
-prepared_work = ratios_RDD.map(job2)
+ratios_RDD = sc.parallelize(range(0, 1000), 1000)
+prepared_work = ratios_RDD.map(job3)
 result = prepared_work.collect()
 
 print("begin results")
