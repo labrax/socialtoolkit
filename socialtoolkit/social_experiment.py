@@ -42,6 +42,9 @@ class Experiment(object):
         self.i = 1
         while not self._convergence.is_done():
             self.iterate()
+        while not self._queue.empty():
+            e = self._queue.get()
+            e[1].step(self.i)
         return self.i
     def iterate(self):
         """Run an iteration."""
@@ -83,4 +86,7 @@ class EqualMultilayerExperiment(Experiment):
             self._G = self.all_G[self._curr[0]]
             self._model = self.all_model[self._curr[0]]
             super(EqualMultilayerExperiment, self).iterate()
+        while not self._queue.empty():
+            e = self._queue.get()
+            e[1].step(self.i)
         return self.i
