@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-
+This source contains an example for a similar run as in Axelrod's paper.
 """
 
 import networkx as nx
@@ -11,12 +11,10 @@ from socialtoolkit.social_experiment import Experiment
 from socialtoolkit.graph import normal_distribution
 
 from socialtoolkit.algorithm import Convergence
-from socialtoolkit.algorithm.evolution import Axelrod
-from socialtoolkit.algorithm.evolution import Centola
-from socialtoolkit.algorithm.evolution import ExpandableCentolaAlgorithm
+from socialtoolkit.algorithm.evolution import Axelrod, Centola, MultilayerCentola
 from socialtoolkit.algorithm.analysis import CommandAnalysis
 
-from socialtoolkit.algorithm.analysis.graph_util import get_grid_groups
+from socialtoolkit.algorithm.analysis.graph_util import get_grid_groups_axelrod
 from socialtoolkit.algorithm.analysis.util import get_cultural_groups
 
 if __name__ == "__main__":
@@ -34,13 +32,13 @@ if __name__ == "__main__":
     population = (normal_distribution, [width*height, features, traits])
     experiment = Experiment(G, population, evolution_algorithm, convergence)
     
-    analysis = [CommandAnalysis(0, step_analysis, get_grid_groups, [experiment._G, experiment._population]),
+    analysis = [CommandAnalysis(0, step_analysis, get_grid_groups_axelrod, [experiment._G, experiment._population]),
         CommandAnalysis(0, step_analysis, get_cultural_groups, [experiment._population])]
     experiment.add_analysis(analysis)
     
     print experiment.converge()
     #print "final", get_grid_groups(experiment._G, experiment._population)
     #print "final", get_cultural_groups(experiment._population)
-    print "get_grid_groups:", analysis[0].get_results()
+    print "get_grid_groups_axelrod:", analysis[0].get_results()
     print "get_cultural_groups:", analysis[1].get_results()
     

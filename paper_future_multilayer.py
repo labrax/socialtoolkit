@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-
+This source is an example for a run case with multilayer.
 """
 
 import networkx as nx
@@ -11,7 +11,7 @@ from socialtoolkit.social_experiment import EqualMultilayerExperiment
 from socialtoolkit.graph import normal_distribution
 
 from socialtoolkit.algorithm import Convergence
-from socialtoolkit.algorithm.evolution import ExpandableCentolaAlgorithm
+from socialtoolkit.algorithm.evolution import MultilayerCentola
 from socialtoolkit.algorithm.analysis import CommandAnalysis, AmountIterationLayerAnalysis, OutputAnalysis
 
 from socialtoolkit.algorithm.analysis.graph_util import fast_get_connected_components_len, fast_get_connected_components_len
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     for i in range(layers):
         all_G.append((nx.grid_2d_graph, [width, height]))
     convergence = Convergence(max_iterations, step_check)
-    evolution_algorithm = ExpandableCentolaAlgorithm
+    evolution_algorithm = MultilayerCentola
     population = (normal_distribution, [width*height, features, traits])
     experiment = EqualMultilayerExperiment(all_G, population, evolution_algorithm, convergence, layers)
     
