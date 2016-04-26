@@ -29,6 +29,7 @@ pip install networkx
 4. Put the created folder on the common directory (in my case /userdata/vroth)
 5. Configure the needed dependencies for the running machine
   > pip install py4j
+  > zip util/socialtoolkit socialtoolkit/*
 
 ### Before running
  ```
