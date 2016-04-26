@@ -25,6 +25,8 @@ import networkx as nx
 
 import argparse
 
+from multiprocessing import Pool, cpu_count
+
 def process_args():
     """Return the processed arguments."""
     parser = argparse.ArgumentParser(
@@ -43,9 +45,10 @@ def process_args():
         help='an simulation algorithm, "axelrod" or "centola"')
     parser.add_argument('-l', '--layers', metavar='N', default=1, type=int, nargs=1,
         help='a number of layers')
-    parser.add_argument('--spark', metavar='SPARK', dest='spark',
-        action='store_const', const=True, default=False,
+    parser.add_argument('--spark', metavar='SPARK', const="spark://10.1.1.28:7077", type=str, nargs='?',
         help='connect using spark')
+    parser.add_argument('--threads', metavar='THREADS', default=cpu_count(), type=int, nargs=1,
+        help='set the number of threads - default on this machine ' + str(cpu_count()))
     """
     parser.add_argument('-aR', '--analysisinterval', metavar='N', type=int, nargs='+',
                     help='an interval for the analysis')
@@ -144,12 +147,15 @@ def work(parameters):
 if __name__ == "__main__":
     args = process_args()
 
+    #process the ranges
     args.gridsize = process_range(args.gridsize)
     args.traits = process_range(args.traits)
     args.features = process_range(args.features)
     
+    #returns the algorithm class given the name
     args.algorithm = algorithm_name_for_algorithm(args.algorithm)
     
+    #fix for int values
     if type(args.convergence_max_iterations) == list:
         args.convergence_max_iterations = args.convergence_max_iterations[0]
     if type(args.convergence_step_check) == list:
@@ -157,14 +163,18 @@ if __name__ == "__main__":
     if type(args.layers) == list:
         args.layers = args.layers[0]
     
+    #append layers fields
     layers_output = " "
     if args.layers > 1:
         for i in range(0, args.layers):
             layers_output += str(i) + "_physycal_groups " + str(i) + "_biggest_physical_group " + str(i) + "_cultural_groups "
+    #print header
     print("algo width height layers features traits max_iterations step_check biggest_physical_group physical_groups cultural_groups" + layers_output + "convergence_its convergence_time")
     
+    #stores all the parameters for execution
     all_P = []
     
+    #generate all the parameters
     for gs in args.gridsize:
         for t in args.traits:
             for f in args.features:
@@ -180,9 +190,10 @@ if __name__ == "__main__":
                 parameters['layers'] = args.layers
                 all_P.append(parameters)
     
-    if args.spark == True:
+    #run case for spark
+    if args.spark:
         from pyspark import SparkContext, SparkConf
-        conf = SparkConf().setAppName("social_simulations_" + str(time())).setMaster("spark://10.1.1.28:7077")
+        conf = SparkConf().setAppName("social_simulations_" + str(time())).setMaster(args.spark)
         sc = SparkContext(conf=conf)
         sc.addPyFile("util/socialtoolkit.zip")
         ratios_RDD = sc.parallelize(all_P, len(all_P))
@@ -200,12 +211,12 @@ if __name__ == "__main__":
                     output += str(e) + " "
                 print(output)
     else:
-        amount_process = len(all_P)
-        if amount_process > 8:
-            amount_process = 8
+        if len(all_P) < args.threads:
+            amount_process = len(all_P)
+        else:
+            amount_process = args.threads
 
-        if amount_process > 1:
-            from multiprocessing import Pool
+        if amount_process > 1: #run with multiple processes
             pool = Pool(processes=amount_process)
             result = pool.map(work, all_P)
             pool.close()
@@ -220,11 +231,12 @@ if __name__ == "__main__":
                             continue
                         output += str(e) + " "
                     print(output)
-        else:
-            result = work(all_P[0])
-            output = ""
-            for e in result:
-                if e == "" or e == None:
-                    continue
-                output += str(e) + " "
-            print(output)
+        else: #run in a single process
+            for x in all_P:
+                result = work(x)
+                output = ""
+                for e in result:
+                    if e == "" or e == None:
+                        continue
+                    output += str(e) + " "
+                print(output)
