@@ -19,6 +19,8 @@ from socialtoolkit.algorithm.analysis.util import get_cultural_groups, get_cultu
 
 from socialtoolkit.social_experiment import Experiment, EqualMultilayerExperiment
 
+from socialtoolkit.errors import ParameterError
+
 from time import time
 
 import networkx as nx
@@ -95,6 +97,7 @@ def algorithm_name_for_algorithm(val):
         print("Invalid name for algorithm '" + val + "'.", file=sys.stderr)
         exit(-1)
 
+#@profile
 def work(parameters):
     """Returns the simulation for a given parameter dictionary.
     
@@ -162,6 +165,8 @@ if __name__ == "__main__":
         args.convergence_step_check = args.convergence_step_check[0]
     if type(args.layers) == list:
         args.layers = args.layers[0]
+    if type(args.threads) == list:
+        args.threads = args.threads[0]
     
     #append layers fields
     layers_output = " "
@@ -178,6 +183,9 @@ if __name__ == "__main__":
     for gs in args.gridsize:
         for t in args.traits:
             for f in args.features:
+                if f%args.layers != 0:
+                    raise ParameterError("Invalid relation of features and layers.", "Features must be divisible by layers!", {'features' : f, 'layers' : args.layers})
+
                 parameters = {}
                 parameters['width'] = gs
                 parameters['height'] = gs
