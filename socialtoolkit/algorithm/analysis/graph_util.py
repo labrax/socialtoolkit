@@ -75,12 +75,6 @@ def fast_get_connected_components(G):
             bisect.insort_left(sizes, amt)
             seen.update(c)
     return sizes
-def fast_get_connected_components_len(G):
-    """Return the amount of physical groups.
-    
-    Args:
-        G (networkx.classes.graph): the graph."""
-    return len(fast_get_connected_components(G))
 def has_path(G, node1, node2):
     """Returns True if there is a path between 2 nodes.
     
@@ -93,4 +87,45 @@ def has_path(G, node1, node2):
         return True
     except:
         return False
+def get_amount_physical_groups(G):
+    """Returns the amount of physical groups.
+    
+    Args:
+        G (networkx.classes.graph): the graph."""
+    return len(fast_get_connected_components(G))
+def get_size_biggest_physical_groups(G):
+    """Returns the size of the biggest physical group.
+    
+    Args:
+        G (networkx.classes.graph): the graph."""
+    return max(fast_get_connected_components(G))
+def get_info_physical_groups(G):
+    """Returns the amount of physical groups and the biggest one.
+    
+    Args:
+        G (networkx.classes.graph): the graph list."""
+    info = fast_get_connected_components(G)
+    return len(info), max(info)
+def get_amount_physical_groups_unify(G):
+    """Returns the amount of physical groups unifying layers.
+    
+    Args:
+        G (list of networkx.classes.graph): the graph list."""
+    newG = nx.compose_all(G)
+    return len(fast_get_connected_components(newG))
+def get_size_biggest_physical_groups_unify(G):
+    """Returns the size of the biggest physical group unifying layers.
+    
+    Args:
+        G (list of networkx.classes.graph): the graph list."""
+    newG = nx.compose_all(G)
+    return max(fast_get_connected_components(newG))
+def get_info_physical_groups_unify(G):
+    """Returns the amount of physical groups and the biggest one unifying layers.
+    
+    Args:
+        G (list of networkx.classes.graph): the graph list."""
+    newG = nx.compose_all(G)
+    info = fast_get_connected_components(newG)
+    return len(info), max(info)
 ###### MODIFIED FROM NETWORKX ######

@@ -14,16 +14,16 @@ from socialtoolkit.algorithm import Convergence
 from socialtoolkit.algorithm.evolution import MultilayerCentola
 from socialtoolkit.algorithm.analysis import CommandAnalysis, AmountIterationLayerAnalysis, OutputAnalysis
 
-from socialtoolkit.algorithm.analysis.graph_util import fast_get_connected_components_len, fast_get_connected_components_len
-from socialtoolkit.algorithm.analysis.util import get_cultural_groups_layer, get_cultural_groups, overlap_similarity_layer
+from socialtoolkit.algorithm.analysis.graph_util import get_amount_physical_groups, get_size_biggest_physical_groups
+from socialtoolkit.algorithm.analysis.util import get_amount_cultural_groups_layer, get_amount_cultural_groups, overlap_similarity_layer
 
 from time import clock
 
 if __name__ == "__main__":
-    width = 32
-    height = 32
+    width = 10
+    height = 10
     features = 6
-    traits = 10000
+    traits = 2
     layers = 3
     max_iterations = 5*10**6
     step_check = 3*10**4
@@ -38,13 +38,13 @@ if __name__ == "__main__":
     experiment = EqualMultilayerExperiment(all_G, population, evolution_algorithm, convergence, layers)
     
     analysis = [
-        CommandAnalysis(0, step_analysis, fast_get_connected_components_len, [experiment.all_G[0]]),
-        CommandAnalysis(0, step_analysis, fast_get_connected_components_len, [experiment.all_G[1]]),
-        CommandAnalysis(0, step_analysis, fast_get_connected_components_len, [experiment.all_G[2]]),
-        CommandAnalysis(0, step_analysis, get_cultural_groups_layer, [experiment._population, 0, layers]),
-        CommandAnalysis(0, step_analysis, get_cultural_groups_layer, [experiment._population, 1, layers]),
-        CommandAnalysis(0, step_analysis, get_cultural_groups_layer, [experiment._population, 2, layers]),
-        CommandAnalysis(0, step_analysis, get_cultural_groups, [experiment._population]),
+        CommandAnalysis(0, step_analysis, get_amount_physical_groups, [experiment.all_G[0]]),
+        CommandAnalysis(0, step_analysis, get_amount_physical_groups, [experiment.all_G[1]]),
+        CommandAnalysis(0, step_analysis, get_amount_physical_groups, [experiment.all_G[2]]),
+        CommandAnalysis(0, step_analysis, get_amount_cultural_groups_layer, [experiment._population, 0, layers]),
+        CommandAnalysis(0, step_analysis, get_amount_cultural_groups_layer, [experiment._population, 1, layers]),
+        CommandAnalysis(0, step_analysis, get_amount_cultural_groups_layer, [experiment._population, 2, layers]),
+        CommandAnalysis(0, step_analysis, get_amount_cultural_groups, [experiment._population]),
         AmountIterationLayerAnalysis(experiment._curr, layers)]
     experiment.add_analysis(analysis)
     for i in range(0, layers):
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     #print "get_cultural_groups:", analysis[3].get_results()
     #print "iterations for each layer:", analysis[-1].get_results()
     
-    oa = OutputAnalysis(analysis[0:7], headers=["iteration", analysis[0]._function, analysis[1]._function, analysis[2]._function, analysis[3]._function, analysis[4]._function, analysis[5]._function, analysis[6]._function], output='all_info.csv')
+    oa = OutputAnalysis(analysis[0:7], headers=["iteration", analysis[0]._function, analysis[1]._function, analysis[2]._function, analysis[3]._function, analysis[4]._function, analysis[5]._function, analysis[6]._function])
     oa.write()
     
     """

@@ -15,7 +15,7 @@ from socialtoolkit.algorithm.evolution import Axelrod, Centola, MultilayerCentol
 from socialtoolkit.algorithm.analysis import CommandAnalysis
 
 from socialtoolkit.algorithm.analysis.graph_util import get_grid_groups_axelrod
-from socialtoolkit.algorithm.analysis.util import get_cultural_groups
+from socialtoolkit.algorithm.analysis.util import get_amount_cultural_groups
 
 if __name__ == "__main__":
     width = 10
@@ -33,12 +33,12 @@ if __name__ == "__main__":
     experiment = Experiment(G, population, evolution_algorithm, convergence)
     
     analysis = [CommandAnalysis(0, step_analysis, get_grid_groups_axelrod, [experiment._G, experiment._population]),
-        CommandAnalysis(0, step_analysis, get_cultural_groups, [experiment._population])]
+        CommandAnalysis(0, step_analysis, get_amount_cultural_groups, [experiment._population])]
     experiment.add_analysis(analysis)
     
     print experiment.converge()
     #print "final", get_grid_groups(experiment._G, experiment._population)
-    #print "final", get_cultural_groups(experiment._population)
+    #print "final", get_amount_cultural_groups(experiment._population)
     print "get_grid_groups_axelrod:", analysis[0].get_results()
-    print "get_cultural_groups:", analysis[1].get_results()
+    print "get_amount_cultural_groups:", analysis[1].get_results()
     
