@@ -47,10 +47,10 @@ class STK:
         #run case for spark
         if self.args.spark:
             from pyspark import SparkContext, SparkConf
-            conf = SparkConf().setAppName("social_simulations_" + str(time())).setMaster(args.spark) ###TODO: change?
+            conf = SparkConf().setAppName("social_simulations_" + str(time())).setMaster(self.args.spark) ###TODO: change?
             sc = SparkContext(conf=conf)
             sc.addPyFile("util/socialtoolkit.zip")
-            ratios_RDD = sc.parallelize(all_P, len(all_P))
+            ratios_RDD = sc.parallelize(self.all_P, len(self.all_P))
             prepared_work = ratios_RDD.map(work)
             result = prepared_work.collect()
         else:
@@ -225,7 +225,7 @@ if __name__ == "__main__":
     #append layers fields
     layers_output = " "
     if stk.args.layers > 1:
-        for i in range(0, args.layers):
+        for i in range(0, stk.args.layers):
             layers_output += str(i) + "_physycal_groups " + str(i) + "_biggest_physical_group " + str(i) + "_cultural_groups "
     #print header
     print("algo width height layers features traits max_iterations step_check biggest_physical_group physical_groups cultural_groups" + layers_output + "convergence_its convergence_time")
