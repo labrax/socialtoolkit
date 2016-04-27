@@ -5,6 +5,8 @@
 This source defines a unified class for output printing with variable arguments.
 """
 
+from __future__ import print_function
+
 import sys
 try:
     from queue import PriorityQueue
@@ -14,7 +16,7 @@ from .analysis import AnalysisAlgorithm
 
 class OutputAnalysis:
     """Class for output of analysis"""
-    def __init__(self, analysis, headers=[], delimeter=', ', output=sys.stdout):
+    def __init__(self, analysis, headers=[], delimeter=',', output=sys.stdout):
         """Args:
             analysis (list/AnalysisAlgorithm instance or list of AnalysisAlgorithm instances): the analysis ran.
             headers (list of str): the name for each output column.
@@ -24,7 +26,7 @@ class OutputAnalysis:
         Note:
             If the output filename is a file that already exists it will be removed and re-created."""
         self.analysis = []
-        if type(analysis) == type([]) and isinstance(analysis[0], AnalysisAlgorithm): #many analysis
+        if type(analysis) == list and isinstance(analysis[0], AnalysisAlgorithm): #many analysis
             for i in analysis:
                 self.analysis.append(i.get_results())
         elif isinstance(analysis, AnalysisAlgorithm): #only one analysis
@@ -33,11 +35,11 @@ class OutputAnalysis:
             self.analysis = analysis
         self.headers = headers
         self.delimeter = delimeter
-        if type(output) == type(str()): #if is a string name opens the file for writing
+        if type(output) == str: #if is a string name opens the file for writing
             try:
                 self.output = open(output, "w")
-            except Error as e:
-                print(e, "thus using stdout")
+            except Exception as e:
+                print(e, "thus using stdout", file=sys.stderr)
                 self.output = sys.stdout
         else:
             self.output = output
@@ -47,15 +49,15 @@ class OutputAnalysis:
             self.output.close()
     def write(self):
         """Print all output."""
-        if type(self.headers) == type(str()): #if the header is a str
+        if type(self.headers) == str: #if the header is a str
             self.output.write(str(self.headers) + '\n')
         elif self.headers:
-            if type(self.headers[0]) == type(str()): #or as list of string
+            if type(self.headers[0]) == str: #or as list of string
                 output = self.headers[0]
             else: #or as list of functions
                 output = self.headers[0].__name__
             for h in self.headers[1:]: #the remaining of the list
-                if type(h) == type(str()):
+                if type(h) == str:
                     output += self.delimeter + h
                 else:
                     output += self.delimeter + h.__name__
