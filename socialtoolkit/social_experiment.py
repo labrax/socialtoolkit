@@ -39,7 +39,7 @@ class Experiment(object):
             self._queue.put((i.next(), i))
     def converge(self):
         """Run until convergence."""
-        self.i = 1
+        self.i = 0
         while not self._convergence.is_done():
             self.iterate()
         while not self._queue.empty():
