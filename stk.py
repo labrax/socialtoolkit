@@ -12,20 +12,21 @@ from socialtoolkit.errors import ParameterError
 from socialtoolkit.worker import work
 
 import argparse
-import sys
 from multiprocessing import Pool, cpu_count
-from time import time
+from time import time, ctime
+import sys
 
 class STK:
     def __init__(self):
+        self.run_id = ctime().replace(' ', '_')
         self.args = self.__process_args()
 
         #process the ranges
         self.args.gridsize = self.__process_range(self.args.gridsize)
         self.args.traits = self.__process_range(self.args.traits)
         self.args.features = self.__process_range(self.args.features)
-        
-        #fix for int values
+
+        #fix for int/str in list values
         if type(self.args.convergence_max_iterations) == list:
             self.args.convergence_max_iterations = self.args.convergence_max_iterations[0]
         if type(self.args.convergence_step_check) == list:
@@ -38,96 +39,15 @@ class STK:
             self.args.analysis_step = self.args.analysis_step[0]
         if type(self.args.output_dir) == list:
             self.args.output_dir = self.args.output_dir[0]
+        if self.args.output_dir[-1] != '/':
+            self.args.output_dir += '/'
+        if self.args.analysis_step != 0:
+            self.__prepare_dir(self.args.output_dir)
             
         #returns the algorithm class given the name
         self.args.algorithm = self.__algorithm_name_for_algorithm(self.args.algorithm, self.args.layers)
-        self.all_P = self.__exec_params(self.args) #store all the parameters for execution
-    def run(self):
-        result = []
-        #run case for spark
-        if self.args.spark:
-            from pyspark import SparkContext, SparkConf
-            conf = SparkConf().setAppName("social_simulations_" + str(time())).setMaster(self.args.spark) ###TODO: change?
-            sc = SparkContext(conf=conf)
-            sc.addPyFile("util/socialtoolkit.zip")
-            ratios_RDD = sc.parallelize(self.all_P, len(self.all_P))
-            prepared_work = ratios_RDD.map(work)
-            result = prepared_work.collect()
-        else:
-            if len(self.all_P) < self.args.threads:
-                amount_process = len(self.all_P)
-            else:
-                amount_process = self.args.threads
-
-            if amount_process > 1: #run with multiple processes
-                pool = Pool(processes=amount_process)
-                result = pool.map(work, self.all_P)
-                pool.close()
-                pool.join()
-            else: #run in a single process
-                for i in self.all_P:
-                    result.append(work(i))
-        return result
-    def write(self, result, file=sys.stdout):
-        for i in result:
-            if i == None:
-                print("invalid value", file=sys.stderr)
-            else:
-                output = ""
-                for e in i:
-                    if e == "" or e == None:
-                        continue
-                    output += str(e) + " "
-                print(output, file=file)
-    def __exec_params(self, args):
-        """Returns the list of parameters for execution.
-        
-        Args:
-            args (Namespace): the processed arguments of the program."""
-        all_P = []
-        
-        global_parameters = {}
-        global_parameters['algorithm'] = args.algorithm
-        global_parameters['max_iterations'] = args.convergence_max_iterations
-        if global_parameters['max_iterations'] == 0:
-            global_parameters['max_iterations'] = 150000*10*args.traits[-1]
-        global_parameters['step_check'] = args.convergence_step_check
-        global_parameters['layers'] = args.layers
-
-        if args.physical or args.cultural or args.biggest_physical or args.biggest_cultural:
-            global_parameters['physical'] = args.physical
-            global_parameters['cultural'] = args.cultural
-            global_parameters['biggest_physical'] = args.biggest_physical
-            global_parameters['biggest_cultural'] = args.biggest_cultural
-        else:
-            global_parameters['physical'] = True
-            global_parameters['cultural'] = True
-            global_parameters['biggest_physical'] = True
-            global_parameters['biggest_cultural'] = True
-        global_parameters['no_layer_by_layer'] = args.no_layer_by_layer
-        global_parameters['analysis_step'] = args.analysis_step
-        global_parameters['output_dir'] = args.output_dir
-        global_parameters['id'] = str(time())
-        
-        #generate all the parameters
-        for gs in args.gridsize:
-            for t in args.traits:
-                for f in args.features:
-                    if f%args.layers != 0:
-                        #raise ParameterError("Invalid relation of features and layers.", "Features must be divisible by layers!", {'features' : f, 'layers' : args.layers})
-                        print("Invalid relation of features and layers.\nFeatures must be divisible by layers! Skipping features and layers: ", features, layers)
-                        continue
-
-                    parameters = {}
-                    parameters['width'] = gs
-                    parameters['height'] = gs
-                    parameters['features'] = f
-                    parameters['traits'] = t
-                    
-                    parameters['global_parameters'] = global_parameters
-                    all_P.append(parameters)
-        
-        return all_P
+        #store all the parameters for execution
+        self.all_P = self.__exec_params(self.args)
     def __process_args(self): #return args from sys.argv
         """Return the processed arguments."""
         parser = argparse.ArgumentParser(
@@ -171,9 +91,9 @@ class STK:
         parser.add_argument('-DA', '--dont-analyse-layer-by-layer', metavar='DA', dest='no_layer_by_layer',
             action='store_const', const=True, default=False,
             help='don\'t calculate the analysis for individual layers - if on multilayer')
-        parser.add_argument('-SA', '--analysis-step', metavar='N', dest='analysis_step', default=sys.maxsize, type=int, nargs=1,
+        parser.add_argument('-SA', '--analysis-step', metavar='N', dest='analysis_step', default=0, type=int, nargs=1,
             help='an interval for the analysis')
-        parser.add_argument('-OA', '--analysis-output', metavar='OUTPUT-DIR', dest='output_dir', default="/userdata/vroth/output_data/", type=str, nargs=1,
+        parser.add_argument('-OA', '--analysis-output', metavar='OUTPUT-DIR', dest='output_dir', default="/userdata/vroth/output_data/run_" + str(self.run_id), type=str, nargs=1,
             help='a folder for the output of analysis')
         
         """
@@ -218,15 +138,134 @@ class STK:
                 return Centola
         print("Invalid name for algorithm '" + val + "'.", file=sys.stderr)
         exit(-1)
+    def __exec_params(self, args):
+        """Returns the list of parameters for execution.
+        
+        Args:
+            args (Namespace): the processed arguments of the program."""
+        all_P = []
+        
+        global_parameters = {}
+        global_parameters['algorithm'] = args.algorithm
+        global_parameters['max_iterations'] = args.convergence_max_iterations
+        if global_parameters['max_iterations'] == 0:
+            global_parameters['max_iterations'] = 150000*10*args.traits[-1]
+        global_parameters['step_check'] = args.convergence_step_check
+        global_parameters['layers'] = args.layers
 
+        if args.physical == False and args.cultural == False and args.biggest_physical == False and args.biggest_cultural == False:
+            args.physical = True
+            args.cultural = True
+            args.biggest_physical = True
+            args.biggest_cultural = True
+        global_parameters['physical'] = args.physical
+        global_parameters['cultural'] = args.cultural
+        global_parameters['biggest_physical'] = args.biggest_physical
+        global_parameters['biggest_cultural'] = args.biggest_cultural
+
+        global_parameters['no_layer_by_layer'] = args.no_layer_by_layer
+        global_parameters['analysis_step'] = args.analysis_step
+        global_parameters['output_dir'] = args.output_dir
+        global_parameters['identifier'] = self.run_id
+        
+        #generate all the parameters
+        for gs in args.gridsize:
+            for t in args.traits:
+                for f in args.features:
+                    if f%args.layers != 0:
+                        #raise ParameterError("Invalid relation of features and layers.", "Features must be divisible by layers!", {'features' : f, 'layers' : args.layers})
+                        print("Invalid relation of features and layers.\nFeatures must be divisible by layers! Skipping features and layers: ", features, layers)
+                        continue
+
+                    parameters = {}
+                    parameters['width'] = gs
+                    parameters['height'] = gs
+                    parameters['features'] = f
+                    parameters['traits'] = t
+                    
+                    parameters['global_parameters'] = global_parameters
+                    all_P.append(parameters)
+        
+        return all_P
+    def __prepare_dir(self, directory):
+        import re
+        import os
+        for i in re.finditer('/', directory):
+            if directory[i.start()-1] == '/' or i.start() == 0:
+                continue
+            curr = directory[:i.start()]
+            try:
+                os.mkdir(curr)
+            except OSError as e:
+                if e.errno == 17:
+                    pass
+    def run(self):
+        result = []
+        #run case for spark
+        if self.args.spark:
+            from pyspark import SparkContext, SparkConf
+            conf = SparkConf().setAppName("social_simulations_" + str(self.run_id)).setMaster(self.args.spark)
+            sc = SparkContext(conf=conf)
+            sc.addPyFile("util/socialtoolkit.zip")
+            ratios_RDD = sc.parallelize(self.all_P, len(self.all_P))
+            prepared_work = ratios_RDD.map(work)
+            result = prepared_work.collect()
+        else:
+            if len(self.all_P) < self.args.threads:
+                amount_process = len(self.all_P)
+            else:
+                amount_process = self.args.threads
+
+            if amount_process > 1: #run with multiple processes
+                pool = Pool(processes=amount_process)
+                result = pool.map(work, self.all_P)
+                pool.close()
+                pool.join()
+            else: #run in a single process
+                for i in self.all_P:
+                    result.append(work(i))
+        return result
+    def get_headers(self):
+        if hasattr(self, "headers"):
+            return self.headers
+        self.headers = ["algorithm", "width", "height", "layers", "features", "traits", "convergence_max_iterations", "convergence_step_check", "convergence_iterations", "convergence_time"]
+        if self.args.layers > 1:
+            if self.args.physical:
+                self.headers.append("amount_physical_groups")
+            if self.args.biggest_physical:
+                self.headers.append("biggest_physical_groups")
+            if self.args.cultural:
+                self.headers.append("amount_cultural_groups")
+            if self.args.biggest_cultural:
+                self.headers.append("biggest_cultural_groups")
+            if not self.args.no_layer_by_layer:
+                for i in range(0, self.args.layers):
+                    if self.args.physical:
+                        self.headers.append(str(i) + "amount_physical_groups")
+                    if self.args.biggest_physical:
+                        self.headers.append(str(i) + "biggest_physical_groups")
+                    if self.args.cultural:
+                        self.headers.append(str(i) + "amount_cultural_groups")
+                    if self.args.biggest_cultural:
+                        self.headers.append(str(i) + "biggest_cultural_groups")
+        else:
+            if self.args.physical:
+                self.headers.append("amount_physical_groups")
+            if self.args.biggest_physical:
+                self.headers.append("biggest_physical_groups")
+            if self.args.cultural:
+                self.headers.append("amount_cultural_groups")
+            if self.args.biggest_cultural:
+                self.headers.append("biggest_cultural_groups")
+        return self.headers
+    def write(self, result, delimeter=',', file=sys.stdout):
+        print(delimeter.join(str(i) for i in self.get_headers()), file=file)
+        for i in result:
+            if i == None:
+                print("invalid value", file=sys.stderr)
+            else:
+                print(delimeter.join(str(x) for x in i), file=file)
 
 if __name__ == "__main__":
     stk = STK()
-    #append layers fields
-    layers_output = " "
-    if stk.args.layers > 1:
-        for i in range(0, stk.args.layers):
-            layers_output += str(i) + "_physycal_groups " + str(i) + "_biggest_physical_group " + str(i) + "_cultural_groups "
-    #print header
-    print("algo width height layers features traits max_iterations step_check biggest_physical_group physical_groups cultural_groups" + layers_output + "convergence_its convergence_time")
     stk.write(stk.run())
