@@ -5,10 +5,25 @@
 This source defines analysis operation that aren't related to graphs.
 """
 
-import numpy as np
+from __future__ import print_function
 
-def deprecated(func, **param):
-    raise DeprecationWarning(func.__name__ + " is deprecated, update code.")
+import numpy as np
+import sys
+
+deprecated_stop = False
+deprecated_warn = False
+
+def deprecated(func):
+    def raise_exception(*args, **kwargs):
+        if deprecated_stop: 
+            raise DeprecationWarning(func.__name__ + " is deprecated, update code.")
+        global deprecated_warn
+        if not deprecated_warn:
+            print(func.__name__ + " is deprecated, update code.", file=sys.stderr)
+            deprecated_warn = True
+        return func(*args, **kwargs)
+    raise_exception.__name__ = func.__name__
+    return raise_exception
 
 def overlap_similarity(features1, features2):
     """Returns the overlap similarity from features of 2 nodes.
@@ -47,7 +62,7 @@ def get_cultural_groups(population):
 def _cultural_groups(population):
     checked = {}
     for i in population:
-        checked[i] = checked.get(tuple(i), 0) + 1
+        checked[tuple(i)] = checked.get(tuple(i), 0) + 1
     return checked
     
 def get_size_biggest_cultural_groups(population):
@@ -63,6 +78,14 @@ def get_amount_cultural_groups(population):
     Args:
         population (list of list): the features and traits of the population."""
     return len(_cultural_groups(population))
+
+def get_info_cultural_groups(population):
+    """Returns the amount of cultural groups and the biggest one.
+    
+    Args:
+        population (list of list): the features and traits of the population."""
+    info = _cultural_groups(population)
+    return len(_cultural_groups(population)), max(_cultural_groups(population).values())
 
 ###### MULTIPLE LAYERS #####
 def overlap_similarity_layer(features1, features2, curr_layer, amount_layers):
@@ -121,3 +144,12 @@ def get_amount_cultural_groups_layer(population, curr_layer, amount_layers):
         curr_layer (int): the current layer being operated.
         amount_layers (int): the total amount of layers."""
     return len(_cultural_groups_layer(population, curr_layer, amount_layers))
+    
+def get_info_cultural_groups_layer(population, curr_layer, amount_layers):
+    """Returns the amount of cultural groups and the biggest one considering only a layer.
+    
+    Args:
+        population (list of list): the features and traits of the population.
+        curr_layer (int): the current layer being operated.
+        amount_layers (int): the total amount of layers."""
+    return len(_cultural_groups_layer(population, curr_layer, amount_layers)), max(_cultural_groups_layer(population, curr_layer, amount_layers).values())
