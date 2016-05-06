@@ -39,6 +39,10 @@ class STK:
             self.args.analysis_step = self.args.analysis_step[0]
         if type(self.args.output_dir) == list:
             self.args.output_dir = self.args.output_dir[0]
+        if type(self.args.graph_input) == list:
+            self.args.graph_input = self.args.graph_input[0]
+        if type(self.args.population_input) == list:
+            self.args.population_input = self.args.population_input[0]
         if self.args.output_dir[-1] != '/':
             self.args.output_dir += '/'
         if self.args.analysis_step != 0:
@@ -95,15 +99,15 @@ class STK:
             help='an interval for the analysis')
         parser.add_argument('-OA', '--analysis-output', metavar='OUTPUT-DIR', dest='output_dir', default="/userdata/vroth/output_data/run_" + str(self.run_id), type=str, nargs=1,
             help='a folder for the output of analysis')
+            
+        parser.add_argument('-IP', '--input-population', metavar='POPULATION_INPUT_FILE', dest='population_input', type=str, nargs=1,
+            help='an input population file')
+        parser.add_argument('-IG', '--input-graph', metavar='GRAPH_INPUT_FILE', dest='graph_input', type=str, nargs=1,
+            help='an input graph file')
         
-        """
-        parser.add_argument('-aO', '--analysis-output', metavar='<output file>', type=str, nargs='+',
-            help='the output for analysis')
-
-        parser.add_argument('-aA', '--analysisalgorithm', metavar='<algorithm name>', type=str, nargs='+',
-            help='the algorithms for analysis')
-        """
         args = parser.parse_args()
+        print(args.graph_input, args.population_input)
+        #exit(-1)
         return args
     def __process_range(self, val): #return range from parameters
         """Returns a list for given program arguments.
@@ -168,13 +172,16 @@ class STK:
         global_parameters['output_dir'] = args.output_dir
         global_parameters['identifier'] = self.run_id
         
+        global_parameters['graph_input'] = args.graph_input
+        global_parameters['population_input'] = args.population_input
+        
         #generate all the parameters
         for gs in args.gridsize:
             for t in args.traits:
                 for f in args.features:
                     if f%args.layers != 0:
                         #raise ParameterError("Invalid relation of features and layers.", "Features must be divisible by layers!", {'features' : f, 'layers' : args.layers})
-                        print("Invalid relation of features and layers.\nFeatures must be divisible by layers! Skipping features and layers: ", features, layers)
+                        print("Invalid relation of features and layers.\nFeatures must be divisible by layers! Skipping features and layers: ", f, self.args.layers)
                         continue
 
                     parameters = {}
@@ -218,7 +225,7 @@ class STK:
 
             if amount_process > 1: #run with multiple processes
                 pool = Pool(processes=amount_process)
-                result = pool.map(work, self.all_P)
+                result = pool.imap(work, self.all_P)
                 pool.close()
                 pool.join()
             else: #run in a single process

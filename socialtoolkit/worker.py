@@ -9,7 +9,7 @@ from __future__ import print_function
 
 from .algorithm import Convergence
 from .algorithm.evolution.axelrod import Axelrod
-from .graph import normal_distribution
+from .graph import normal_distribution, population_from_file, graph_from_file
 from .social_experiment import Experiment, EqualMultilayerExperiment
 
 from .algorithm.analysis import CommandAnalysis, AmountIterationLayerAnalysis, OutputAnalysis
@@ -47,19 +47,33 @@ def work(parameters):
     output_dir = global_parameters['output_dir']
     identifier = global_parameters['identifier']
     
+    population_input = global_parameters['population_input']
+    graph_input = global_parameters['graph_input']
+    
     this_name = "output_gs{0}_f{1}_t{2}_l{3}_{4}.csv".format(width, features, traits, layers, evolution_algorithm.__name__)
     analysis = []
     headers = ['iteration']
     
     convergence = Convergence(max_iterations, step_check)
-    population = (normal_distribution, [width*height, features, traits])
+    
+    if type(population_input) == str:
+        population = (population_from_file, [population_input])
+        width = "file:"+population_input
+        height = "file"
+        features = "file"
+        traits = "file"
+    else:
+        population = (normal_distribution, [width*height, features, traits])
     
     results = [evolution_algorithm.__name__, width, height, layers, features, traits, max_iterations, step_check]
     
     if layers > 1:
         all_G = []
         for i in range(layers):
-            all_G.append((nx.grid_2d_graph, [width, height]))
+            if type(graph_input) == str:
+                all_G.append((graph_from_file, [graph_input, i, layers]))
+            else:
+                all_G.append((nx.grid_2d_graph, [width, height]))
         experiment = EqualMultilayerExperiment(all_G, population, evolution_algorithm, convergence, layers)
         for i in range(0, layers):
             experiment.all_model[i].overlap_function(overlap_similarity_layer, [i, layers])
@@ -93,7 +107,10 @@ def work(parameters):
                 #analysis.append(AmountIterationLayerAnalysis(experiment._curr, layers))##to enable fix OutputAnalysis to not use, and return on results
             experiment.add_analysis(analysis)
     else:
-        G = (nx.grid_2d_graph, [width, height])
+        if type(graph_input) == str:
+            G = (graph_from_file, [graph_input])
+        else:
+            G = (nx.grid_2d_graph, [width, height])
         experiment = Experiment(G, population, evolution_algorithm, convergence)
         if analysis_step > 0:
             if physical:
@@ -148,16 +165,3 @@ def work(parameters):
             results.append(get_size_biggest_cultural_groups(experiment._population))
     return results
 
-if __name__ == "__main__":
-    parameters = {}
-    parameters['width'] = 5
-    parameters['height'] = 5
-    parameters['features'] = 5
-    parameters['traits'] = 5
-    
-    global_parameters = {}
-    global_parameters['max_iterations'] = 100000
-    global_parameters['step_check'] = 10000
-    global_parameters['layers'] = 1
-    global_parameters['algorithm'] = Axelrod
-    print(work(parameters))
