@@ -29,6 +29,7 @@ class Experiment(object):
             self._model = evolution_algorithm(self._G, self._population)
         self._convergence = convergence
         self._queue = PriorityQueue()
+        self.iterate = self._iterate_no_step_analysis
     def add_analysis(self, analysis):
         """Adds an analysis to the experiment.
         
@@ -37,6 +38,7 @@ class Experiment(object):
         self._analysis = analysis
         for i in analysis:
             self._queue.put((i.next(), i))
+        self.iterate = self._iterate_step_analysis
     def converge(self):
         """Run until convergence."""
         self.i = 0
@@ -47,13 +49,19 @@ class Experiment(object):
             e[1].step(self.i)
         return self.i
     def iterate(self):
+        pass
+    def _iterate_step_analysis(self):
         """Run an iteration."""
         #if self.i % 10**3 == 0:
-            #print self.i
+        #    print self.i
+        #if not self._queue.empty():
         while not self._queue.empty() and self._queue.queue[0][0] <= self.i:
             e = self._queue.get()
             if e[1].step(self.i) != self.i:
                 self._queue.put((e[1].next(), e[1]))
+        self._convergence.update(self.i, self._model.iterate())
+        self.i = self.i + 1
+    def _iterate_no_step_analysis(self):
         self._convergence.update(self.i, self._model.iterate())
         self.i = self.i + 1
 
@@ -80,7 +88,7 @@ class EqualMultilayerExperiment(Experiment):
         """Run until convergence.
         
         Note: this method changes the current graph on the run."""
-        self.i = 1
+        self.i = 0
         while not self._convergence.is_done():
             self._curr[0] = random.randint(len(self.all_G))
             self._G = self.all_G[self._curr[0]]

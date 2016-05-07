@@ -33,10 +33,12 @@ class EvolutionAlgorithm(Algorithm):
     def getName(self):
         """Returns self.__class__.__name__"""
         return self.__class__.__name__
+    #@profile
     def pre_iteration(self):
         """Returns pre information for one iteration: active node, passive node, neighbors of active, features of active node and features of passive node"""
         if self._grid:
-            active = (int(sqrt(random.randint(self._nodes))), int(sqrt(random.randint(self._nodes))))
+            num_side = int(sqrt(self._nodes))
+            active = (random.randint(num_side), random.randint(num_side))
             neighbors = self.G.neighbors(active)
             if len(neighbors) == 0:
                 return None
