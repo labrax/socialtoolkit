@@ -12,20 +12,27 @@ from socialtoolkit.errors import ParameterError
 from socialtoolkit.worker import work
 
 import argparse
-from multiprocessing import Pool, cpu_count
+from multiprocessing import cpu_count
 from time import time, ctime
 import sys
+
+def work_stk(parameters):
+    from socialtoolkit.worker import work
+    return work(parameters)
 
 class STK:
     def __init__(self):
         self.run_id = ctime().replace(' ', '_')
         self.args = self.__process_args()
+        if self.args.auto_output:
+            self.output = self.__run_name(self.args)
+        else:
+            self.output = sys.stdout
 
         #process the ranges
         self.args.gridsize = self.__process_range(self.args.gridsize)
         self.args.traits = self.__process_range(self.args.traits)
         self.args.features = self.__process_range(self.args.features)
-
         #fix for int/str in list values
         if type(self.args.convergence_max_iterations) == list:
             self.args.convergence_max_iterations = self.args.convergence_max_iterations[0]
@@ -45,9 +52,28 @@ class STK:
             self.args.population_input = self.args.population_input[0]
         if self.args.output_dir[-1] != '/':
             self.args.output_dir += '/'
-        if self.args.analysis_step != 0:
+        if self.args.analysis_step != 0 or self.args.population_output or self.args.graph_output:
             self.__prepare_dir(self.args.output_dir)
-            
+        if type(self.args.repeat) == list:
+            self.args.repeat = self.args.repeat[0]
+        #conflicts
+        if self.args.graph_input != None and len(self.args.gridsize) > 1:
+            #raise ParameterError("Can't load a graph and use multiple gridsizes.", "When using a loaded graph don't set a range for gridsize!", {'gridsize' : len(self.args.gridsize), 'graph_input' : self.args.graph_input})
+            print("Can't load a graph and use multiple gridsizes.", file=sys.stderr)
+            exit(-1)
+        if self.args.population_input != None and (len(self.args.traits) > 1 or len(args.features) > 1):
+            #raise ParameterError("Can't load a population file and use information.", "When using a loaded population file don't set a range for features or traits!", {'features' : len(self.args.features), 'traits' : len(self.args.traits), 'population_input' : self.args.population_input})
+            print("Can't load a graph and use multiple features or traits.", file=sys.stderr)
+            exit(-1)
+        #incoherent values
+        if self.args.analysis_step < 0:
+            #raise ParameterError("Interval for analysis step invalid.", "Interval for analysis step must be an integer above 1!", {'repeat' : self.args.analysis_step})
+            print("Interval for analysis step invalid - must be an integer above 1.", file=sys.stderr)
+            exit(-1)
+        if self.args.repeat <= 0:
+            #raise ParameterError("Number of repeats invalid.", "Number of repeats must be an integer equal or above 1!", {'repeat' : self.args.repeat})
+            print("Number of repeats invalid - must be an integer equal or above 1.", file=sys.stderr)
+            exit(-1)
         #returns the algorithm class given the name
         self.args.algorithm = self.__algorithm_name_for_algorithm(self.args.algorithm, self.args.layers)
         #store all the parameters for execution
@@ -56,6 +82,7 @@ class STK:
         """Return the processed arguments."""
         parser = argparse.ArgumentParser(
             description='Execute a simulation for a generated network and properties using a social algorithm. The ranges can be written as values to iterate in between (2 or 3 arguments) or as a list of elements.')
+        #base configuration
         parser.add_argument('-gs', '--gridsize', metavar='N', default=32, type=int, nargs='+',
             help='a range for the gridsize')
         parser.add_argument('-t', '--traits', metavar='N', default=3, type=int, nargs='+',
@@ -66,20 +93,17 @@ class STK:
             help='a number of layers')
         parser.add_argument('-A', '--algorithm', metavar='<algorithm>', default="axelrod", type=str, nargs=1,
             help='an simulation algorithm, "axelrod" or "centola"')
-        
         #convergence settings
         parser.add_argument('-cI', '--convergence-max-iterations', metavar='N', default=0, type=int, nargs=1,
             help='maximum number of iterations')
         parser.add_argument('-cS', '--convergence-step-check', metavar='N', default=10**4, type=int, nargs=1,
             help='step for convergence check')
-        
         #multithreading
         parser.add_argument('--spark', metavar='SPARK', const="spark://10.1.1.28:7077", type=str, nargs='?',
             help='connect using spark')
         parser.add_argument('--threads', metavar='THREADS', dest='threads', default=cpu_count(), type=int, nargs=1,
             help='set the number of threads - default on this machine ' + str(cpu_count()))
-        
-        #analysis
+        #analysis settings
         parser.add_argument('-p', '--physical', metavar='P', dest='physical',
             action='store_const', const=True, default=False,
             help='calculate the number of physical groups')
@@ -95,20 +119,63 @@ class STK:
         parser.add_argument('-DA', '--dont-analyse-layer-by-layer', metavar='DA', dest='no_layer_by_layer',
             action='store_const', const=True, default=False,
             help='don\'t calculate the analysis for individual layers - if on multilayer')
+        #analysis step-by-step
         parser.add_argument('-SA', '--analysis-step', metavar='N', dest='analysis_step', default=0, type=int, nargs=1,
             help='an interval for the analysis')
         parser.add_argument('-OA', '--analysis-output', metavar='OUTPUT-DIR', dest='output_dir', default="/userdata/vroth/output_data/run_" + str(self.run_id), type=str, nargs=1,
             help='a folder for the output of analysis')
-            
-        parser.add_argument('-IP', '--input-population', metavar='POPULATION_INPUT_FILE', dest='population_input', type=str, nargs=1,
+        #input files for graph and population
+        parser.add_argument('-IP', '--input-population', metavar='POPULATION-INPUT-FILE', dest='population_input', type=str, nargs=1,
             help='an input population file')
-        parser.add_argument('-IG', '--input-graph', metavar='GRAPH_INPUT_FILE', dest='graph_input', type=str, nargs=1,
+        parser.add_argument('-IG', '--input-graph', metavar='GRAPH-INPUT-FILE', dest='graph_input', type=str, nargs=1,
             help='an input graph file')
-        
+        """parser.add_argument('-OP', '--output-population', metavar='POPULATION-OUTPUT', dest='population_output',
+            action='store_const', const=True, default=False,
+            help='an output population file')
+        parser.add_argument('-OG', '--output-graph', metavar='GRAPH-OUTPUT', dest='graph_output',
+            action='store_const', const=True, default=False,
+            help='an output graph file')"""
+        #other settings
+        parser.add_argument('-R', '--repeat', metavar='N', dest='repeat', default=1, type=int, nargs=1,
+            help='number of runs for each setting')
+        parser.add_argument('--auto-output', metavar='AUTO-OUTPUT', dest='auto_output',
+            action='store_const', const=True, default=False,
+            help='auto generate output file given input settings')
         args = parser.parse_args()
-        print(args.graph_input, args.population_input)
-        #exit(-1)
         return args
+    def __run_name(self, args):
+        gridsize = args.gridsize
+        if len(args.gridsize) == 1:
+            gridsize = args.gridsize[0]
+        elif len(args.gridsize) == 2:
+            gridsize = "{0}_{1}".format(args.gridsize[0], args.gridsize[1])
+        elif len(args.gridsize) == 3:
+            gridsize = "{0}_{1}__{2}".format(args.gridsize[0], args.gridsize[1], args.gridsize[2])
+        else:
+            gridsize = "list{0}_to_{1}".format(args.gridsize[0], args.gridsize[-1])
+        traits = args.traits
+        if len(args.traits) == 1:
+            traits = args.traits[0]
+        elif len(args.traits) == 2:
+            traits = "{0}_{1}".format(args.traits[0], args.traits[1])
+        elif len(args.traits) == 3:
+            traits = "{0}_{1}__{2}".format(args.traits[0], args.traits[1], args.traits[2])
+        else:
+            traits = "list{0}_to_{1}".format(args.traits[0], args.traits[-1])
+        features = args.features
+        if len(args.features) == 1:
+            features = args.features[0]
+        elif len(args.features) == 2:
+            features = "{0}_{1}".format(args.features[0], args.features[1])
+        elif len(args.features) == 3:
+            features = "{0}_{1}__{2}".format(args.features[0], args.features[1], args.features[2])
+        else:
+            features = "list{0}_to_{1}".format(args.features[0], args.features[-1])
+        if type(self.args.layers) == list:
+            layers = self.args.layers[0]
+        else:
+            layers = self.args.layers
+        return "simulation_{5}_gs{0}_f{1}_t{2}_l{3}_{4}.csv".format(gridsize, features, traits, layers, self.args.algorithm, self.run_id)
     def __process_range(self, val): #return range from parameters
         """Returns a list for given program arguments.
         
@@ -176,23 +243,23 @@ class STK:
         global_parameters['population_input'] = args.population_input
         
         #generate all the parameters
-        for gs in args.gridsize:
-            for t in args.traits:
-                for f in args.features:
-                    if f%args.layers != 0:
-                        #raise ParameterError("Invalid relation of features and layers.", "Features must be divisible by layers!", {'features' : f, 'layers' : args.layers})
-                        print("Invalid relation of features and layers.\nFeatures must be divisible by layers! Skipping features and layers: ", f, self.args.layers)
-                        continue
+        for r in range(args.repeat):
+            for gs in args.gridsize:
+                for t in args.traits:
+                    for f in args.features:
+                        if f%args.layers != 0:
+                            #raise ParameterError("Invalid relation of features and layers.", "Features must be divisible by layers!", {'features' : f, 'layers' : args.layers})
+                            print("Invalid relation of features and layers.\nFeatures must be divisible by layers! Skipping features and layers: ", f, self.args.layers, file=sys.stderr)
+                            continue
 
-                    parameters = {}
-                    parameters['width'] = gs
-                    parameters['height'] = gs
-                    parameters['features'] = f
-                    parameters['traits'] = t
-                    
-                    parameters['global_parameters'] = global_parameters
-                    all_P.append(parameters)
-        
+                        parameters = {}
+                        parameters['width'] = gs
+                        parameters['height'] = gs
+                        parameters['features'] = f
+                        parameters['traits'] = t
+                        parameters['repeat'] = r
+                        parameters['global_parameters'] = global_parameters
+                        all_P.append(parameters)
         return all_P
     def __prepare_dir(self, directory):
         import re
@@ -211,11 +278,12 @@ class STK:
         #run case for spark
         if self.args.spark:
             from pyspark import SparkContext, SparkConf
-            conf = SparkConf().setAppName("social_simulations_" + str(self.run_id)).setMaster(self.args.spark)
-            sc = SparkContext(conf=conf)
+            conf = SparkConf().setAppName("social_simulations_" + str(self.run_id)).setMaster(self.args.spark)#.set("spark.eventLog.enabled", "false").set("spark.shuffle.service.enabled.", "true").set("spark.dynamicAllocation.enabled", "true")#.set("spark.python.profile", "true")
+            sc = SparkContext(conf=conf) #('local', 'test')
+            sc.setLogLevel("WARN")
             sc.addPyFile("util/socialtoolkit.zip")
             ratios_RDD = sc.parallelize(self.all_P, len(self.all_P))
-            prepared_work = ratios_RDD.map(work)
+            prepared_work = ratios_RDD.map(work_stk)
             result = prepared_work.collect()
         else:
             if len(self.all_P) < self.args.threads:
@@ -224,13 +292,11 @@ class STK:
                 amount_process = self.args.threads
 
             if amount_process > 1: #run with multiple processes
-                pool = Pool(processes=amount_process)
-                result = pool.imap(work, self.all_P)
-                pool.close()
-                pool.join()
+                from socialtoolkit.local_worker_manager import run
+                result = run(amount_process, work_stk, self.all_P)
             else: #run in a single process
                 for i in self.all_P:
-                    result.append(work(i))
+                    result.append(work_stk(i))
         return result
     def get_headers(self):
         if hasattr(self, "headers"):
@@ -266,6 +332,9 @@ class STK:
                 self.headers.append("biggest_cultural_groups")
         return self.headers
     def write(self, result, delimeter=',', file=sys.stdout):
+        if type(file) == str:
+            file = open(file, "w")
+        
         print(delimeter.join(str(i) for i in self.get_headers()), file=file)
         for i in result:
             if i == None:
@@ -275,4 +344,5 @@ class STK:
 
 if __name__ == "__main__":
     stk = STK()
-    stk.write(stk.run())
+    print(stk.output)
+    stk.write(stk.run(), file=stk.output)
