@@ -5,6 +5,8 @@
 This source contains an example for a similar run as in Axelrod's paper.
 """
 
+from __future__ import print_function
+
 import networkx as nx
 
 from socialtoolkit.social_experiment import Experiment
@@ -36,9 +38,9 @@ if __name__ == "__main__":
         CommandAnalysis(0, step_analysis, get_amount_cultural_groups, [experiment._population])]
     experiment.add_analysis(analysis)
     
-    print experiment.converge()
+    print(experiment.converge())
     #print "final", get_grid_groups(experiment._G, experiment._population)
     #print "final", get_amount_cultural_groups(experiment._population)
-    print "get_grid_groups_axelrod:", analysis[0].get_results()
-    print "get_amount_cultural_groups:", analysis[1].get_results()
+    print("get_grid_groups_axelrod:", analysis[0].get_results())
+    print("get_amount_cultural_groups:", analysis[1].get_results())
     
