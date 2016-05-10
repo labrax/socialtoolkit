@@ -1,6 +1,5 @@
 
 __version__ = 1
-__all__ = ["population", "graph"]
+__all__ = ["network"]
 
-from .population import *
-from .graph import Graph, graph_from_file
+from .network import *

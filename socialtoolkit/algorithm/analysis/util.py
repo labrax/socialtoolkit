@@ -149,3 +149,22 @@ def get_info_cultural_groups_layer(population, curr_layer, amount_layers):
         amount_layers (int): the total amount of layers."""
     info = _cultural_groups_layer(population, curr_layer, amount_layers)
     return len(info), max(info.values())
+def get_cultural_groups_distribution(population, traits, gama=None):
+    """Returns the distribution of node traits.
+    
+    Args:
+        population (list of list): the features and traits of the population.
+        traits (int): the amount of traits of the current graph.
+        gama (number): the gama used for the current graph generation."""
+    val = {}
+    d = _get_power_law_distribution(traits, gama)
+
+    for node in population:
+        for i in node:
+            for k in range(len(d)):
+                if i <= d[k]:
+                    val[k] = val.get(k, 0) + 1
+                    break
+    result = list(val)
+    result.sort()
+    return result
