@@ -5,19 +5,28 @@ from __future__ import print_function
 import multiprocessing, os, signal, time, Queue
 import sys
 
+def run(amount_process, function, parameters):
+    pool= multiprocessing.Pool(processes=amount_process)
+    results = []
+    for x in pool.imap(function, parameters):
+        results.append(x)
+    return results
+
 #based on code from Bryce Boe, available at: http://bryceboe.com/2010/08/26/python-multiprocessing-and-keyboardinterrupt/
 
 def _manual_function(job_queue, result_queue):
     signal.signal(signal.SIGINT, signal.SIG_IGN)
-    while not job_queue.empty():
+    while not job_queue.empty(): ##### JOBS ARE FINISHING WITHOUT ENDING THE OTHERS
         try:
             job = job_queue.get(block=False)
-            result_queue.put(job[0](job[1]))
+            #print(job, result_queue.qsize(), job_queue.qsize())
+            result = job[0](job[1])
+            result_queue.put(result)
         except Queue.Empty:
             pass
-        #except KeyboardInterrupt: pass
+    ##print(os.getpid(), "going home", job_queue.empty()) ## <<------------------- JOBS ENDING BEFORE
 
-def run(amount_process, function, parameters):
+def run2(amount_process, function, parameters):
     """Returns the execution of a function from a given set of parameters.
     
     Args:
@@ -25,7 +34,7 @@ def run(amount_process, function, parameters):
         function (func): the function.
         parameters (list): the list of arguments for the function."""
     job_queue = multiprocessing.Queue()
-    result_queue = multiprocessing.Queue()
+    result_queue = multiprocessing.Queue(len(parameters))
     for i in parameters:
         job_queue.put((function, i))
     workers = []
