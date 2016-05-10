@@ -24,6 +24,12 @@ class STK:
     def __init__(self):
         self.run_id = ctime().replace(' ', '_')
         self.args = self.__process_args()
+        
+        if type(self.args.layers) == list:
+            self.args.layers = self.args.layers[0]
+        #returns the algorithm class given the name
+        self.args.algorithm = self.__algorithm_name_for_algorithm(self.args.algorithm, self.args.layers)
+        
         if self.args.auto_output:
             self.output = self.__run_name(self.args)
         else:
@@ -38,8 +44,6 @@ class STK:
             self.args.convergence_max_iterations = self.args.convergence_max_iterations[0]
         if type(self.args.convergence_step_check) == list:
             self.args.convergence_step_check = self.args.convergence_step_check[0]
-        if type(self.args.layers) == list:
-            self.args.layers = self.args.layers[0]
         if type(self.args.threads) == list:
             self.args.threads = self.args.threads[0]
         if type(self.args.analysis_step) == list:
@@ -74,8 +78,6 @@ class STK:
             #raise ParameterError("Number of repeats invalid.", "Number of repeats must be an integer equal or above 1!", {'repeat' : self.args.repeat})
             print("Number of repeats invalid - must be an integer equal or above 1.", file=sys.stderr)
             exit(-1)
-        #returns the algorithm class given the name
-        self.args.algorithm = self.__algorithm_name_for_algorithm(self.args.algorithm, self.args.layers)
         #store all the parameters for execution
         self.all_P = self.__exec_params(self.args)
     def __process_args(self): #return args from sys.argv
@@ -94,7 +96,7 @@ class STK:
         parser.add_argument('-A', '--algorithm', metavar='<algorithm>', default="axelrod", type=str, nargs=1,
             help='an simulation algorithm, "axelrod" or "centola"')
         #convergence settings
-        parser.add_argument('-cI', '--convergence-max-iterations', metavar='N', default=0, type=int, nargs=1,
+        parser.add_argument('-cI', '--convergence-max-iterations', metavar='N', default=150*10**6, type=int, nargs=1,
             help='maximum number of iterations')
         parser.add_argument('-cS', '--convergence-step-check', metavar='N', default=10**4, type=int, nargs=1,
             help='step for convergence check')
@@ -129,12 +131,12 @@ class STK:
             help='an input population file')
         parser.add_argument('-IG', '--input-graph', metavar='GRAPH-INPUT-FILE', dest='graph_input', type=str, nargs=1,
             help='an input graph file')
-        """parser.add_argument('-OP', '--output-population', metavar='POPULATION-OUTPUT', dest='population_output',
+        parser.add_argument('-OP', '--output-population', metavar='POPULATION-OUTPUT', dest='population_output',
             action='store_const', const=True, default=False,
-            help='an output population file')
+            help='DISABLED - an output population file')
         parser.add_argument('-OG', '--output-graph', metavar='GRAPH-OUTPUT', dest='graph_output',
             action='store_const', const=True, default=False,
-            help='an output graph file')"""
+            help='DISABLED - an output graph file')
         #other settings
         parser.add_argument('-R', '--repeat', metavar='N', dest='repeat', default=1, type=int, nargs=1,
             help='number of runs for each setting')
@@ -175,7 +177,7 @@ class STK:
             layers = self.args.layers[0]
         else:
             layers = self.args.layers
-        return "simulation_{5}_gs{0}_f{1}_t{2}_l{3}_{4}.csv".format(gridsize, features, traits, layers, self.args.algorithm, self.run_id)
+        return "simulation_{5}_gs{0}_f{1}_t{2}_l{3}_{4}.csv".format(gridsize, features, traits, layers, self.args.algorithm.__name__, self.run_id)
     def __process_range(self, val): #return range from parameters
         """Returns a list for given program arguments.
         
@@ -220,7 +222,7 @@ class STK:
         global_parameters['algorithm'] = args.algorithm
         global_parameters['max_iterations'] = args.convergence_max_iterations
         if global_parameters['max_iterations'] == 0:
-            global_parameters['max_iterations'] = 150000*10*args.traits[-1]
+            global_parameters['max_iterations'] = 150*(10**4)
         global_parameters['step_check'] = args.convergence_step_check
         global_parameters['layers'] = args.layers
 
@@ -334,7 +336,6 @@ class STK:
     def write(self, result, delimeter=',', file=sys.stdout):
         if type(file) == str:
             file = open(file, "w")
-        
         print(delimeter.join(str(i) for i in self.get_headers()), file=file)
         for i in result:
             if i == None:
@@ -344,5 +345,6 @@ class STK:
 
 if __name__ == "__main__":
     stk = STK()
-    print(stk.output)
+    if stk.output != sys.stdout:
+        print("output to:", stk.output)
     stk.write(stk.run(), file=stk.output)
