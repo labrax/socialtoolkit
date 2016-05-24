@@ -13,6 +13,7 @@ from math import sqrt
 from numpy import random
 from random import choice
 
+
 class EvolutionAlgorithm(Algorithm):
     """Base algorithm for evolution"""
     def __init__(self, G, population):
@@ -30,12 +31,14 @@ class EvolutionAlgorithm(Algorithm):
             self._grid = True
         else:
             self._grid = False
+
     def getName(self):
         """Returns self.__class__.__name__"""
         return self.__class__.__name__
-    #@profile
+
     def pre_iteration(self):
-        """Returns pre information for one iteration: active node, passive node, neighbors of active, features of active node and features of passive node"""
+        """Returns pre information for one iteration: active node, passive node, neighbors of active,
+        features of active node and features of passive node"""
         if self._grid:
             num_side = int(sqrt(self._nodes))
             active = (random.randint(num_side), random.randint(num_side))
@@ -45,7 +48,7 @@ class EvolutionAlgorithm(Algorithm):
             passive = choice(neighbors)
             features_active = self.population[active[0]*int(sqrt(self._nodes)) + active[1]]
             features_passive = self.population[passive[0]*int(sqrt(self._nodes)) + active[1]]
-            return (active, passive, neighbors, features_active, features_passive)
+            return active, passive, neighbors, features_active, features_passive
         else:
             active = random.randint(self._nodes)
             neighbors = self.G.neighbors(active)
@@ -54,7 +57,8 @@ class EvolutionAlgorithm(Algorithm):
             passive = choice(neighbors)
             features_active = self.population[active]
             features_passive = self.population[passive]
-            return (active, passive, neighbors, features_active, features_passive)
+            return active, passive, neighbors, features_active, features_passive
+
     def iterate(self):
         """Dummy: do nothing - to be implemented on children classes"""
         pass

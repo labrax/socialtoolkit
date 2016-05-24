@@ -9,6 +9,7 @@ import networkx as nx
 from math import sqrt
 import bisect
 
+
 def get_grid_groups_axelrod(G, population):
     """Returns the amount of cultural groups for a grid in relation to its neighbors.
     
@@ -42,8 +43,11 @@ def get_grid_groups_axelrod(G, population):
             if isequal1 is False and isequal2 is False and isequal3 is False:
                 amount_components += 1
     return amount_components
-###### MODIFIED FROM NETWORKX ######
-#from nx.algorithms.components.connected
+
+# MODIFIED FROM NETWORKX #
+# from nx.algorithms.components.connected
+
+
 def _plain_bfs(G, source):
     """Returns the amount of nodes explored and the nodes seen from a source node using BFS.
     
@@ -61,7 +65,9 @@ def _plain_bfs(G, source):
                 seen.add(v)
                 amt += 1
                 nextlevel.update(G[v])
-    return (amt, seen)
+    return amt, seen
+
+
 def fast_get_connected_components(G):
     """Returns a list with the sizes of each physical group.
     
@@ -75,6 +81,8 @@ def fast_get_connected_components(G):
             bisect.insort_left(sizes, amt)
             seen.update(c)
     return sizes
+
+
 def has_path(G, node1, node2):
     """Returns True if there is a path between 2 nodes.
     
@@ -87,18 +95,24 @@ def has_path(G, node1, node2):
         return True
     except:
         return False
+
+
 def get_amount_physical_groups(G):
     """Returns the amount of physical groups.
     
     Args:
         G (networkx.classes.graph): the graph."""
     return len(fast_get_connected_components(G))
+
+
 def get_size_biggest_physical_groups(G):
     """Returns the size of the biggest physical group.
     
     Args:
         G (networkx.classes.graph): the graph."""
     return max(fast_get_connected_components(G))
+
+
 def get_info_physical_groups(G):
     """Returns the amount of physical groups and the biggest one.
     
@@ -106,6 +120,8 @@ def get_info_physical_groups(G):
         G (networkx.classes.graph): the graph list."""
     info = fast_get_connected_components(G)
     return len(info), max(info)
+
+
 def get_amount_physical_groups_unify(G):
     """Returns the amount of physical groups unifying layers.
     
@@ -113,6 +129,8 @@ def get_amount_physical_groups_unify(G):
         G (list of networkx.classes.graph): the graph list."""
     newG = nx.compose_all(G)
     return len(fast_get_connected_components(newG))
+
+
 def get_size_biggest_physical_groups_unify(G):
     """Returns the size of the biggest physical group unifying layers.
     
@@ -120,6 +138,8 @@ def get_size_biggest_physical_groups_unify(G):
         G (list of networkx.classes.graph): the graph list."""
     newG = nx.compose_all(G)
     return max(fast_get_connected_components(newG))
+
+
 def get_info_physical_groups_unify(G):
     """Returns the amount of physical groups and the biggest one unifying layers.
     
@@ -128,4 +148,4 @@ def get_info_physical_groups_unify(G):
     newG = nx.compose_all(G)
     info = fast_get_connected_components(newG)
     return len(info), max(info)
-###### MODIFIED FROM NETWORKX ######
+# END MODIFIED FROM NETWORKX #

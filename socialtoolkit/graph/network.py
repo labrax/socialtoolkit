@@ -6,10 +6,9 @@ This source contains information about a a network, graph and population generat
 """
 
 import networkx as nx
-
 import numpy as np
-
 import random
+import math
 
 class Network(object):
     """Graph information class."""
@@ -21,6 +20,7 @@ class Network(object):
             population_data (list of list): information of features and traits."""
         self.graph = graph_data
         self.population_data = population_data
+
 
 def graph_from_file(file_name, curr_layer=0, amount_layers=0):
     """Returns a loaded graph (nx.classes.graph) from an edge file.
@@ -35,7 +35,7 @@ def graph_from_file(file_name, curr_layer=0, amount_layers=0):
     for line in f:
         if line[0] == '#':
             continue
-        if header == False:
+        if not header:
             nodes = int(line.split(" ")[0])
             for i in range(0, nodes):
                 G.add_node(int(i))
@@ -45,6 +45,7 @@ def graph_from_file(file_name, curr_layer=0, amount_layers=0):
             G.add_edge(int(data[0]), int(data[1]))
     return G
 
+
 def population_from_file(file_name):
     """Returns a loaded population (list of list) from a file information.
     
@@ -52,10 +53,12 @@ def population_from_file(file_name):
         file_name (str): the file for input."""
     f = open(file_name, "r")
     header = False
+    features = None
+    population = None
     for line in f:
         if line[0] == '#':
             continue
-        if header == False:
+        if header is False:
             data = line.split(" ")
             nodes = int(data[0])
             features = int(data[1])
@@ -67,6 +70,7 @@ def population_from_file(file_name):
             for i in range(features):
                 population[node, i] = data[i+1]
     return population
+
 
 def normal_distribution(nodes, features, traits):
     """Returns a random generated population (list of list) using the random function from numpy.
@@ -81,17 +85,18 @@ def normal_distribution(nodes, features, traits):
             population[j, i] = np.random.randint(traits)
     return population
 
-import math
+
 def _get_power_law_distribution(q, gama=1+math.log(3)/math.log(2)):
     """return an array of q numbers within 0 and 1 distributed like a discrete power law"""
     distr = []
-    sum = 0
+    curr_sum = 0
     for i in range(q):
         distr.append((i+1)**(-gama))
-        sum += ((i+1)**(-gama))
+        curr_sum += ((i+1)**(-gama))
     for i in range(q):
-        distr[i] = distr[i]/sum
+        distr[i] = distr[i]/curr_sum
     return distr
+
 
 def power_law_distribution(nodes, features, traits):
     """Returns a random generated population (list of list) using a power law-like distribution from numpy.
@@ -105,13 +110,15 @@ def power_law_distribution(nodes, features, traits):
         d[i] = d[i]+d[i-1]
     d[-1] = 1
 
+    val = dict()
+
     population = np.zeros((nodes, features))
     for j in range(nodes):
         for i in range(features):
             v = random.random()
             for k in range(len(d)):
                 if v <= d[k]:
-                    val[k] = val.get(k, 0) + 1
+                    val[k] = val.get(k, 0) + 1  # val indicates the amount of each trait
                     population[j, i] = k
                     break
     return population

@@ -9,9 +9,7 @@ from .evolution_algorithm import EvolutionAlgorithm
 from ..analysis.util import overlap_similarity, get_different_trait_index
 
 import numpy.random as random
-from random import choice
 
-import networkx as nx
 
 class Centola(EvolutionAlgorithm):
     """Algorithm for evolution as proposed on Centola's paper for cultural drift and diffusion"""
@@ -22,13 +20,14 @@ class Centola(EvolutionAlgorithm):
             G (networkx.classes.graph): the graph.
             population (list of list): the features and traits of the population."""
         super(Centola, self).__init__(G, population)
+
     def iterate(self):
         """Iterate once using this algorithm"""
         active, passive, neighbors, features_active, features_passive = super(Centola, self).pre_iteration()
         s = overlap_similarity(features_active, features_passive)
-        if s > 0 and s < 1:
+        if 0 < s < 1:
             if random.random() < s:
-                i =  get_different_trait_index(features_active, features_passive)
+                i = get_different_trait_index(features_active, features_passive)
                 features_active[i] = features_passive[i]
                 return True
         elif s == 0.0:
@@ -36,9 +35,11 @@ class Centola(EvolutionAlgorithm):
             new_neighbor = get_new_neighbor(self._all_nodes, set(neighbors))
             self.G.add_edge(active, new_neighbor)
             return True
-        
+
+
 def get_new_neighbor(G, neighbors):
-    """Returns a node from the graph that isn't in neighbors: this method supposes that graph is always greater than neighbours.
+    """Returns a node from the graph that isn't in neighbors:
+    this method supposes that graph is always greater than neighbours.
     
     Args:
         G (networkx.classes.graph): the graph.

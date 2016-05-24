@@ -13,6 +13,7 @@ import sys
 deprecated_stop = False
 deprecated_warn = False
 
+
 def deprecated(func):
     def raise_exception(*args, **kwargs):
         if deprecated_stop: 
@@ -25,18 +26,20 @@ def deprecated(func):
     raise_exception.__name__ = func.__name__
     return raise_exception
 
+
 def overlap_similarity(features1, features2):
     """Returns the overlap similarity from features of 2 nodes.
     
     Args:
         features1 (list): list of traits values from a node.
         features2 (list): list of traits values from another node."""
-    sum = 0
+    curr_sum = 0
     for i in range(len(features1)):
         if features1[i] == features2[i]:
-            sum += 1
-    return sum/float(len(features1))
+            curr_sum += 1
+    return curr_sum/float(len(features1))
     
+
 def get_different_trait_index(features1, features2):
     """Returns the index of a random trait that is different - IT MUST HAVE A LEAST ONE
     
@@ -45,8 +48,9 @@ def get_different_trait_index(features1, features2):
         features2 (list): list of traits values from another node."""
     while True:
         test = np.random.randint(len(features1))
-        if(features1[test] != features2[test]):
+        if features1[test] != features2[test]:
             return test
+
 
 @deprecated
 def get_cultural_groups(population):
@@ -59,23 +63,30 @@ def get_cultural_groups(population):
         checked.add(tuple(i))
     return len(checked)
 
+
 def _cultural_groups(population):
     checked = {}
     for i in population:
         checked[tuple(i)] = checked.get(tuple(i), 0) + 1
     return checked
+
+
 def get_size_biggest_cultural_groups(population):
     """Returns the size of the biggest cultural group.
     
     Args:
         population (list of list): the features and traits of the population."""
     return max(_cultural_groups(population).values())
+
+
 def get_amount_cultural_groups(population):
     """Returns the amount of cultural groups.
     
     Args:
         population (list of list): the features and traits of the population."""
     return len(_cultural_groups(population))
+
+
 def get_info_cultural_groups(population):
     """Returns the amount of cultural groups and the biggest one.
     
@@ -84,7 +95,9 @@ def get_info_cultural_groups(population):
     info = _cultural_groups(population)
     return len(info), max(info.values())
 
-###### MULTIPLE LAYERS #####
+# MULTIPLE LAYERS #
+
+
 def overlap_similarity_layer(features1, features2, curr_layer, amount_layers):
     """Returns the overlap similarity from features of 2 nodes in mutilayer.
     
@@ -97,11 +110,12 @@ def overlap_similarity_layer(features1, features2, curr_layer, amount_layers):
     Note:
         The behaviour becomes strange for non-divisible number of features by amount of layers."""
     layer_size = len(features1)/amount_layers
-    sum = 0
+    curr_sum = 0
     for i in range(int(layer_size*curr_layer), int(layer_size*(curr_layer+1))):
         if features1[i] == features2[i]:
-            sum += 1
-    return sum/(float(len(features1))/amount_layers)
+            curr_sum += 1
+    return curr_sum/(float(len(features1))/amount_layers)
+
 
 @deprecated
 def get_cultural_groups_layer(population, curr_layer, amount_layers):
@@ -117,13 +131,16 @@ def get_cultural_groups_layer(population, curr_layer, amount_layers):
         checked.add(tuple(i[layer_size*curr_layer:layer_size*(curr_layer+1)]))
     return len(checked)
     
+
 def _cultural_groups_layer(population, curr_layer, amount_layers):
     layer_size = len(population[0])/amount_layers
     checked = {}
     for i in population:
-        checked[tuple(i[layer_size*curr_layer:layer_size*(curr_layer+1)])] = checked.get(tuple(i[layer_size*curr_layer:layer_size*(curr_layer+1)]), 0) + 1
+        checked[tuple(i[layer_size*curr_layer:layer_size*(curr_layer+1)])] = \
+            checked.get(tuple(i[layer_size*curr_layer:layer_size*(curr_layer+1)]), 0) + 1
     return checked
     
+
 def get_size_biggest_cultural_groups_layer(population, curr_layer, amount_layers):
     """Returns the size of the biggest cultural group considering only a layer.
     
@@ -132,6 +149,8 @@ def get_size_biggest_cultural_groups_layer(population, curr_layer, amount_layers
         curr_layer (int): the current layer being operated.
         amount_layers (int): the total amount of layers."""
     return max(_cultural_groups_layer(population, curr_layer, amount_layers).values())
+
+
 def get_amount_cultural_groups_layer(population, curr_layer, amount_layers):
     """Returns the amount of cultural groups considering only a layer.
     
@@ -140,6 +159,8 @@ def get_amount_cultural_groups_layer(population, curr_layer, amount_layers):
         curr_layer (int): the current layer being operated.
         amount_layers (int): the total amount of layers."""
     return len(_cultural_groups_layer(population, curr_layer, amount_layers))
+
+
 def get_info_cultural_groups_layer(population, curr_layer, amount_layers):
     """Returns the amount of cultural groups and the biggest one considering only a layer.
     
@@ -149,6 +170,8 @@ def get_info_cultural_groups_layer(population, curr_layer, amount_layers):
         amount_layers (int): the total amount of layers."""
     info = _cultural_groups_layer(population, curr_layer, amount_layers)
     return len(info), max(info.values())
+
+
 def get_cultural_groups_distribution(population, traits, gama=None):
     """Returns the distribution of node traits.
     
@@ -156,7 +179,7 @@ def get_cultural_groups_distribution(population, traits, gama=None):
         population (list of list): the features and traits of the population.
         traits (int): the amount of traits of the current graph.
         gama (number): the gama used for the current graph generation."""
-    val = {}
+    val = dict()
     d = _get_power_law_distribution(traits, gama)
 
     for node in population:
