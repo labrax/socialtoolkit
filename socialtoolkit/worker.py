@@ -15,8 +15,12 @@ from .algorithm.analysis import CommandAnalysis, AmountIterationLayerAnalysis, O
 from .algorithm.analysis.graph_util import get_amount_physical_groups, get_size_biggest_physical_groups, get_amount_physical_groups_unify, get_size_biggest_physical_groups_unify
 from .algorithm.analysis.util import get_amount_cultural_groups, get_size_biggest_cultural_groups, get_amount_cultural_groups_layer, get_size_biggest_cultural_groups_layer, overlap_similarity_layer
 
+from .algorithm.evolution import Axelrod, Centola, Klemm, MultilayerAxelrod, MultilayerCentola
+
 import networkx as nx
 from time import time
+
+from .graph.network import Network
 
 
 def work(parameters):
@@ -49,6 +53,19 @@ def work(parameters):
     population_input = global_parameters['population_input']
     graph_input = global_parameters['graph_input']
 
+    if layers > 1: ##FIX ###############################################################################################
+        if evolution_algorithm == 'axelrod':
+            evolution_algorithm = MultilayerAxelrod
+        elif evolution_algorithm == 'centola':
+            evolution_algorithm = MultilayerCentola
+    else:
+        if evolution_algorithm == 'axelrod':
+            evolution_algorithm = Axelrod
+        elif evolution_algorithm == 'centola':
+            evolution_algorithm = Centola
+        elif evolution_algorithm == 'klemm':
+            evolution_algorithm = Klemm
+
     this_name = "output_gs{0}_f{1}_t{2}_l{3}_{4}.csv".format(width, features, traits, layers, evolution_algorithm.__name__)
     analysis = []
     headers = ['iteration']
@@ -56,13 +73,13 @@ def work(parameters):
     convergence = Convergence(max_iterations, step_check)
 
     if type(population_input) == str:
-        population = (population_from_file, [population_input])
+        population = population_from_file(population_input)  # population_from_file, [population_input])
         width = "file:"+population_input
         height = "file"
         features = "file"
         traits = "file"
     else:
-        population = (normal_distribution, [width*height, features, traits])
+        population = normal_distribution(width*height, features, traits)  # (normal_distribution, [width*height, features, traits])
 
     results = [evolution_algorithm.__name__, width, height, layers, features, traits, max_iterations, step_check]
 
@@ -70,10 +87,11 @@ def work(parameters):
         all_G = []
         for i in range(layers):
             if type(graph_input) == str:
-                all_G.append((graph_from_file, [graph_input, i, layers]))
+                all_G.append(graph_from_file(graph_input, i, layers))
             else:
-                all_G.append((nx.grid_2d_graph, [width, height]))
-        experiment = EqualMultilayerExperiment(all_G, population, evolution_algorithm, convergence, layers)
+                all_G.append(nx.grid_2d_graph(width, height))
+        network = Network(all_G, population, layers)
+        experiment = EqualMultilayerExperiment(network, evolution_algorithm, convergence, layers)
         for i in range(0, layers):
             experiment.all_model[i].overlap_function(overlap_similarity_layer, [i, layers])
         if analysis_step > 0:
@@ -107,10 +125,11 @@ def work(parameters):
             experiment.add_analysis(analysis)
     else:
         if type(graph_input) == str:
-            G = (graph_from_file, [graph_input])
+            graph = graph_from_file(graph_input)
         else:
-            G = (nx.grid_2d_graph, [width, height])
-        experiment = Experiment(G, population, evolution_algorithm, convergence)
+            graph = nx.grid_2d_graph(width, height)
+        network = Network(graph, population, layers)
+        experiment = Experiment(network, evolution_algorithm, convergence)
         if analysis_step > 0:
             if physical:
                 analysis.append(CommandAnalysis(0, analysis_step, get_amount_physical_groups, [experiment._G]))
@@ -163,4 +182,3 @@ def work(parameters):
         if biggest_cultural:
             results.append(get_size_biggest_cultural_groups(experiment._population))
     return results
-

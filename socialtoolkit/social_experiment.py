@@ -14,17 +14,16 @@ import numpy.random as random
 
 class Experiment(object):
     """The base experiment class."""
-    def __init__(self, G, population, evolution_algorithm, convergence):
+    def __init__(self, network, evolution_algorithm, convergence):
         """Initiates an experiment.
-        
+
         Args:
-            G (networkx.class.graph): the graph.
-            population (list of list): of features and traits of the population.
+            network (socialtoolkit.graph.network): the network with graph and features/traits information.
             evolution_algorithm (socialtoolkit.algorithm.evolution.evolution_algorithm generator): the evolution generator.
             convergence (socialtoolkit.algorithm.convergence): the convergence criteria for the experiment."""
-        if G:
-            self._G = G[0](*G[1])
-        self._population = population[0](*population[1])
+        if network:
+            self._G = network.graph
+            self._population = network.population_data
         if evolution_algorithm:
             self._model = evolution_algorithm(self._G, self._population)
         self._convergence = convergence
@@ -75,22 +74,20 @@ class Experiment(object):
 
 class EqualMultilayerExperiment(Experiment):
     """The experiment class for multilayer."""
-    def __init__(self, G, population, evolution_algorithm, convergence, layers):
+    def __init__(self, network, evolution_algorithm, convergence, layers):
         """Initiates an experiment.
         
         Args:
-            G (networkx.class.graph): the graph.
+            network (socialtoolkit.grpah.network): the network with graph and features/traits information.
             population (list of list): of features and traits of the population.
             evolution_algorithm (socialtoolkit.algorithm.evolution.evolution_algorithm generator): the evolution generator.
             convergence (socialtoolkit.algorithm.convergence): the convergence criteria for the experiment.
             layers (int): the amount of layers."""
-        super(EqualMultilayerExperiment, self).__init__(None, population, None, convergence)
-        self.all_G = []
+        super(EqualMultilayerExperiment, self).__init__(network, None, convergence)
+        self.all_G = network.graph
         self.all_model = []
-        for i in G:
-            curr = i[0](*i[1])
-            self.all_G.append(curr)
-            self.all_model.append(evolution_algorithm(curr, self._population))
+        for i in network.graph:
+            self.all_model.append(evolution_algorithm(i, self._population))
         self._curr = [0]
 
     def converge(self):
@@ -102,7 +99,7 @@ class EqualMultilayerExperiment(Experiment):
             self._curr[0] = random.randint(len(self.all_G))
             self._G = self.all_G[self._curr[0]]
             self._model = self.all_model[self._curr[0]]
-            super(EqualMultilayerExperiment, self).iterate()
+            self.iterate()
         while not self._queue.empty():
             e = self._queue.get()
             e[1].step(self.i)

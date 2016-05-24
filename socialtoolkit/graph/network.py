@@ -12,7 +12,7 @@ import math
 
 class Network(object):
     """Graph information class."""
-    def __init__(self, graph_data, population_data):
+    def __init__(self, graph_data, population_data, layers):
         """Initiates a network with a graph and it's information of population.
         
         Args:
@@ -20,6 +20,7 @@ class Network(object):
             population_data (list of list): information of features and traits."""
         self.graph = graph_data
         self.population_data = population_data
+        self.layers = layers
 
 
 def graph_from_file(file_name, curr_layer=0, amount_layers=0):
