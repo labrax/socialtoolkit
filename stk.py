@@ -7,8 +7,6 @@ The source has the initializer for running the socialtoolkit.
 
 from __future__ import print_function
 
-from socialtoolkit.algorithm.evolution import Axelrod, Centola, MultilayerAxelrod, MultilayerCentola
-
 import argparse
 from multiprocessing import cpu_count
 from time import ctime
@@ -28,7 +26,7 @@ class STK:
         if type(self.args.layers) == list:
             self.args.layers = self.args.layers[0]
 
-        self.args.algorithm = self.__algorithm_name_for_algorithm(self.args.algorithm, self.args.layers)
+        self.args.algorithm = self.__algorithm_name_check(self.args.algorithm)
 
         if self.args.auto_output:
             self.output = self.__run_name(self.args)
@@ -60,6 +58,8 @@ class STK:
             self.__prepare_dir(self.args.output_dir)
         if type(self.args.repeat) == list:
             self.args.repeat = self.args.repeat[0]
+        if type(self.args.klemm_rate) == list:
+            self.args.klemm_rate = self.args.klemm_rate[0]
 
         # conflicts section
         if self.args.graph_input is not None and len(self.args.gridsize) > 1:
@@ -89,7 +89,9 @@ class STK:
     def __process_args(self):
         """Return the processed arguments."""
         parser = argparse.ArgumentParser(
-            description='Execute a simulation for a generated network and properties using a social algorithm. The ranges can be written as values to iterate in between (2 or 3 arguments) or as a list of elements.')
+            description="Execute a simulation for a generated network and properties using a social algorithm." +
+                        "The ranges can be written as values to iterate in between (2 or 3 arguments)" +
+                        " or as a list of elements.")
         # base configuration
         parser.add_argument('-gs', '--gridsize', metavar='N', default=32, type=int, nargs='+',
                             help='a range for the gridsize')
@@ -100,7 +102,10 @@ class STK:
         parser.add_argument('-l', '--layers', metavar='N', default=1, type=int, nargs=1,
                             help='a number of layers')
         parser.add_argument('-A', '--algorithm', metavar='<algorithm>', default="axelrod", type=str, nargs=1,
-                            help='an simulation algorithm, "axelrod" or "centola"')
+                            help='an simulation algorithm, "axelrod", "centola" or "kleem"')
+        # klemm rate
+        parser.add_argument('-K', '--klemm-rate', metavar='N', dest='klemm_rate', default=0.2, type=float, nargs=1,
+                            help="value for Klemm's rate of perturbation")
         # convergence settings
         parser.add_argument('-cI', '--convergence-max-iterations', metavar='N', default=150*10**6, type=int, nargs=1,
                             help='maximum number of iterations')
@@ -197,7 +202,7 @@ class STK:
             return range(val[0], val[1]+1, val[2])
         return val
 
-    def __algorithm_name_for_algorithm(self, val, layers):
+    def __algorithm_name_check(self, val):
         """Returns the algorithm function for the program argument.
         
         Args:
@@ -206,18 +211,11 @@ class STK:
         if type(val) == list:
             val = val[0]
         val = val.lower()
-        if layers > 1:
-            if val == 'axelrod':
-                return MultilayerAxelrod
-            elif val == 'centola':
-                return MultilayerCentola
-        else:
-            if val == 'axelrod':
-                return Axelrod
-            elif val == 'centola':
-                return Centola
-        print("Invalid name for algorithm '" + val + "'.", file=sys.stderr)
-        exit(-1)
+        if val != 'axelrod' and val != 'centola' and val != 'klemm':
+            # raise ParameterError("Invalid name of algorithm.", "Algorithm must be either Axelrod, Centola or Klemm!", {'given algorithm' : val})
+            print("Invalid name for algorithm '" + val + "'.", file=sys.stderr)
+            exit(-1)
+        return val
 
     def __exec_params(self, args):
         """Returns the list of parameters for execution.
@@ -251,6 +249,8 @@ class STK:
 
         global_parameters['graph_input'] = args.graph_input
         global_parameters['population_input'] = args.population_input
+
+        global_parameters['klemm_rate'] = args.klemm_rate
 
         # generate all the parameters
         for r in range(args.repeat):

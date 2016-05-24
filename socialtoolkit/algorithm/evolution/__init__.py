@@ -1,5 +1,6 @@
 from .axelrod import Axelrod
 from .centola import Centola
+from .klemm import Klemm
 from .expandable_model import MultilayerAxelrod, MultilayerCentola
 from .evolution_algorithm import EvolutionAlgorithm
 
