@@ -1,3 +1,17 @@
+# compiled and temporary files
 *.pyc
-/util/stk_env/*
 *.py~
+
+# environment files
+/util/stk_env/*
+
+# pycharm files
+.idea/*
+
+# profile files
+profile_spark.txt
+
+# execution outputs
+teste_output/*
+output_*
+simulation_*
