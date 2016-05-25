@@ -1,0 +1,8 @@
+#nodes features
+5 2
+#node_index, feature0, feature1
+0,0,1
+1,2,1
+2,3,2
+3,0,2
+4,1,0
