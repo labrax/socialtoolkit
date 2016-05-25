@@ -8,6 +8,7 @@ This source defines the multilayer algorithm for evolution, with both the Axelro
 from .evolution_algorithm import EvolutionAlgorithm
 from .centola import get_new_neighbor
 from ..analysis.util import overlap_similarity, get_different_trait_index
+from math import sqrt
 
 import numpy.random as random
 
@@ -105,3 +106,33 @@ class MultilayerCentola(ExpandableAlgorithm):
         population (list of list): the features and traits of the population."""
     def __init__(self, G, population):
         super(MultilayerCentola, self).__init__(G, population, True, True)
+
+class MultilayerKlemm(ExpandableAlgorithm):
+    """The algorithm for a multilayer Klemm.
+
+    Args:
+        G (networkx.classes.graph): the graph.
+        population (list of list): the features and traits of the population.
+        amount_traits (int): the amount of traits.
+        probability (float): the probability for Klemm's cultural drift."""
+
+    def __init__(self, G, population, amount_traits, probability):
+        super(MultilayerKlemm, self).__init__(G, population, True, False)
+        self.amount_traits = amount_traits
+        self.probability = probability
+
+    def iterate(self):
+        if ExpandableAlgorithm.iterate(self) or self.step_klemm():
+            return True
+
+    def step_klemm(self):
+        if random.random() < self.probability:
+            if self._grid:
+                num_side = int(sqrt(self._nodes))
+                active = (random.randint(num_side), random.randint(num_side))
+                features_active = self.population[active[0]*int(sqrt(self._nodes)) + active[1]]
+            else:
+                active = random.randint(self._nodes)
+                features_active = self.population[active]
+            features_active[int(random.random()*len(features_active))] = int(random.random()*self.amount_traits)
+            return True

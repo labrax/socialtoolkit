@@ -32,7 +32,7 @@ class EvolutionAlgorithm(Algorithm):
         else:
             self._grid = False
 
-    def getName(self):
+    def get_name(self):
         """Returns self.__class__.__name__"""
         return self.__class__.__name__
 

@@ -14,7 +14,7 @@ import numpy.random as random
 
 class Experiment(object):
     """The base experiment class."""
-    def __init__(self, network, evolution_algorithm, convergence):
+    def __init__(self, network, evolution_algorithm, convergence, **parameters):
         """Initiates an experiment.
 
         Args:
@@ -25,7 +25,10 @@ class Experiment(object):
             self._G = network.graph
             self._population = network.population_data
         if evolution_algorithm:
-            self._model = evolution_algorithm(self._G, self._population)
+            if evolution_algorithm.__name__ == "Klemm":
+                self._model = evolution_algorithm(self._G, self._population, parameters['traits'], parameters['klemm_rate'])
+            else:
+                self._model = evolution_algorithm(self._G, self._population)
         self._convergence = convergence
         self._queue = PriorityQueue()
         self.iterate = self._iterate_no_step_analysis
@@ -74,7 +77,7 @@ class Experiment(object):
 
 class EqualMultilayerExperiment(Experiment):
     """The experiment class for multilayer."""
-    def __init__(self, network, evolution_algorithm, convergence, layers):
+    def __init__(self, network, evolution_algorithm, convergence, layers, **parameters):
         """Initiates an experiment.
         
         Args:
@@ -87,7 +90,10 @@ class EqualMultilayerExperiment(Experiment):
         self.all_G = network.graph
         self.all_model = []
         for i in network.graph:
-            self.all_model.append(evolution_algorithm(i, self._population))
+            if evolution_algorithm.__name__ == "Klemm" or evolution_algorithm.__name__ == "MultilayerKlemm":
+                self.all_model.append(evolution_algorithm(i, self._population, parameters['traits'], parameters['klemm_rate']))
+            else:
+                self.all_model.append(evolution_algorithm(i, self._population))
         self._curr = [0]
 
     def converge(self):

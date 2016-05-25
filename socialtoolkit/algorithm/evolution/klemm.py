@@ -5,12 +5,12 @@
 This source contains the Konstantin Kleem's cultural drift.
 """
 
-from .centola import Centola
+from .axelrod import Axelrod
 from math import sqrt
 import numpy.random as random
 
 
-class Klemm(Centola):
+class Klemm(Axelrod):
     def __init__(self, G, population, amount_traits, probability):
         self.probability = probability
         self.amount_traits = amount_traits

@@ -28,14 +28,20 @@ class STK:
 
         self.args.algorithm = self.__algorithm_name_check(self.args.algorithm)
 
-        if self.args.auto_output:
-            self.output = self.__run_name(self.args)
-        else:
-            self.output = sys.stdout
+        self.global_headers = dict()
+        self.result = None
 
         self.args.gridsize = self.__process_range(self.args.gridsize)
         self.args.traits = self.__process_range(self.args.traits)
         self.args.features = self.__process_range(self.args.features)
+        self.args.klemm_rate = self.__process_range(self.args.klemm_rate)
+
+        if self.args.auto_output:
+            self.output = self.__run_name(self.args)
+            self.global_output = "global_" + self.output
+        else:
+            self.output = sys.stdout
+            self.global_output = sys.stderr
 
         # fix for int/str in list values
         if type(self.args.convergence_max_iterations) == list:
@@ -58,8 +64,6 @@ class STK:
             self.__prepare_dir(self.args.output_dir)
         if type(self.args.repeat) == list:
             self.args.repeat = self.args.repeat[0]
-        if type(self.args.klemm_rate) == list:
-            self.args.klemm_rate = self.args.klemm_rate[0]
 
         # conflicts section
         if self.args.graph_input is not None and len(self.args.gridsize) > 1:
@@ -104,7 +108,7 @@ class STK:
         parser.add_argument('-A', '--algorithm', metavar='<algorithm>', default="axelrod", type=str, nargs=1,
                             help='an simulation algorithm, "axelrod", "centola" or "kleem"')
         # klemm rate
-        parser.add_argument('-K', '--klemm-rate', metavar='N', dest='klemm_rate', default=0.2, type=float, nargs=1,
+        parser.add_argument('-K', '--klemm-rate', metavar='N', dest='klemm_rate', default=0.01, type=float, nargs='+',
                             help="value for Klemm's rate of perturbation")
         # convergence settings
         parser.add_argument('-cI', '--convergence-max-iterations', metavar='N', default=150*10**6, type=int, nargs=1,
@@ -182,12 +186,20 @@ class STK:
             features = "{0}_{1}__{2}".format(args.features[0], args.features[1], args.features[2])
         else:
             features = "list{0}_to_{1}".format(args.features[0], args.features[-1])
+        if len(args.klemm_rate) == 1:
+            klemm_rate = args.klemm_rate[0]
+        elif len(args.features) == 2:
+            klemm_rate = "{0}_{1}".format(args.klemm_rate[0], args.klemm_rate[1])
+        elif len(args.features) == 3:
+            klemm_rate = "{0}_{1}__{2}".format(args.klemm_rate[0], args.klemm_rate[1], args.klemm_rate[2])
+        else:
+            klemm_rate = "list{0}_to_{1}".format(args.klemm_rate[0], args.klemm_rate[-1])
         if type(self.args.layers) == list:
             layers = self.args.layers[0]
         else:
             layers = self.args.layers
-        return "simulation_{5}_gs{0}_f{1}_t{2}_l{3}_{4}.csv".format(
-            gridsize, features, traits, layers, self.args.algorithm.__name__, self.run_id)
+        return "simulation_{5}_gs{0}_f{1}_t{2}_l{3}_k{6}_{4}.csv".format(
+            gridsize, features, traits, layers, self.args.algorithm, self.run_id, klemm_rate)
 
     def __process_range(self, val):
         """Returns a list for given program arguments.
@@ -206,8 +218,7 @@ class STK:
         """Returns the algorithm function for the program argument.
         
         Args:
-            val (str or list): the name of the class.
-            layers (int): the amount of layers."""
+            val (str or list): the name of the class."""
         if type(val) == list:
             val = val[0]
         val = val.lower()
@@ -250,26 +261,38 @@ class STK:
         global_parameters['graph_input'] = args.graph_input
         global_parameters['population_input'] = args.population_input
 
-        global_parameters['klemm_rate'] = args.klemm_rate
+        self.global_headers = global_parameters.copy()
+        self.global_headers['repeat'] = args.repeat
+        if len(args.gridsize) == 1:
+            self.global_headers['width'] = args.gridsize[0]
+            self.global_headers['height'] = args.gridsize[0]
+        if len(args.traits) == 1:
+            self.global_headers['traits'] = args.traits[0]
+        if len(args.features) == 1:
+            self.global_headers['features'] = args.features[0]
+        if len(args.klemm_rate) == 1:
+            self.global_headers['klemm_rate'] = args.klemm_rate[0]
 
         # generate all the parameters
         for r in range(args.repeat):
             for gs in args.gridsize:
                 for t in args.traits:
                     for f in args.features:
-                        if f % args.layers != 0:
-                            # raise ParameterError("Invalid relation of features and layers.", "Features must be divisible by layers!", {'features' : f, 'layers' : args.layers})
-                            print("Invalid relation of features and layers.\nFeatures must be divisible by layers! Skipping features and layers: ", f, self.args.layers, file=sys.stderr)
-                            continue
+                        for k in args.klemm_rate:
+                            if f % args.layers != 0:
+                                # raise ParameterError("Invalid relation of features and layers.", "Features must be divisible by layers!", {'features' : f, 'layers' : args.layers})
+                                print("Invalid relation of features and layers.\nFeatures must be divisible by layers! Skipping features and layers: ", f, self.args.layers, file=sys.stderr)
+                                continue
 
-                        parameters = dict()
-                        parameters['width'] = gs
-                        parameters['height'] = gs
-                        parameters['features'] = f
-                        parameters['traits'] = t
-                        parameters['repeat'] = r
-                        parameters['global_parameters'] = global_parameters
-                        all_p.append(parameters)
+                            parameters = dict()
+                            parameters['width'] = gs
+                            parameters['height'] = gs
+                            parameters['features'] = f
+                            parameters['traits'] = t
+                            parameters['repeat'] = r
+                            parameters['global_parameters'] = global_parameters
+                            parameters['klemm_rate'] = k
+                            all_p.append(parameters)
         return all_p
 
     def __prepare_dir(self, directory):
@@ -311,7 +334,7 @@ class STK:
                 # run in a single process
                 for i in self.all_P:
                     result.append(work_stk(i))
-        return result
+        self.result = result
 
     def get_headers(self):
         if hasattr(self, "headers") and self.headers is not None:
@@ -348,18 +371,63 @@ class STK:
                 self.headers.append("biggest_cultural_groups")
         return self.headers
 
-    def write(self, result, delimeter=',', target=sys.stdout):
+    def write_global_data(self, target=sys.stdout):
         if type(target) == str:
             target = open(target, "w")
-        print(delimeter.join(str(i) for i in self.get_headers()), file=target)
-        for i in result:
+        for i,j in self.global_headers.iteritems():
             if i is None:
                 print("invalid value", file=sys.stderr)
             else:
-                print(delimeter.join(str(x) for x in i), file=target)
+                print(i, j, file=target)
+
+    def get_fields_to_print(self):
+        important_outputs = ["algorithm", "max_iterations", "step_check", "analysis_step", "layers", "graph_input",
+                             "population_input", "width", "height", "traits", "features", "klemm_rate",
+                             "amount_cultural_groups", "biggest_cultural_group", "amount_physical_groups",
+                             "biggest_physical_group"]
+        will_be_printed = list()
+        for i in important_outputs:
+            if i not in self.global_headers:
+                will_be_printed.append(i)
+        if self.args.layers > 1:
+            for i in range(self.args.layers):
+                will_be_printed.append("amount_cultural_groups" + str(i))
+                will_be_printed.append("biggest_cultural_group" + str(i))
+                will_be_printed.append("amount_physical_groups" + str(i))
+                will_be_printed.append("biggest_physical_group" + str(i))
+        return will_be_printed
+
+    def write_selecting(self, print_list, delimeter=',', target=sys.stdout):
+        if type(target) == str:
+            target = open(target, "w")
+        print(delimeter.join(str(i) for i in print_list), file=target)
+        for i in self.result:
+            if i is None:
+                print("invalid value", file=sys.stderr)
+            else:
+                valid_values = list()
+                for elem in print_list:
+                    if elem in i:
+                        valid_values.append(i[elem])
+                    else:
+                        valid_values.append("-")
+                print(delimeter.join(str(x) for x in valid_values), file=target)
+
+    def write(self, delimeter=',', target=sys.stdout):
+        if type(target) == str:
+            target = open(target, "w")
+        print(delimeter.join(str(i) for i in self.get_headers()), file=target)
+        for i in self.result:
+            if i is None:
+                print("invalid value", file=sys.stderr)
+            else:
+                print(delimeter.join(str(x) for x in i.values()), file=target)
 
 if __name__ == "__main__":
     stk = STK()
     if stk.output != sys.stdout:
         print("output to:", stk.output)
-    stk.write(stk.run(), target=stk.output)
+    stk.run()
+    stk.write_global_data(stk.global_output)
+    stk.write_selecting(stk.get_fields_to_print(), target=stk.output)
+    #stk.write(target=stk.output)
