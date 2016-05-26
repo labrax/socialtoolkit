@@ -16,8 +16,8 @@ from socialtoolkit.algorithm import Convergence
 from socialtoolkit.algorithm.evolution import Axelrod, Centola, MultilayerCentola
 from socialtoolkit.algorithm.analysis import CommandAnalysis
 
-from socialtoolkit.algorithm.analysis.graph_util import get_grid_groups_axelrod
-from socialtoolkit.algorithm.analysis.util import get_amount_cultural_groups
+from socialtoolkit.algorithm.analysis.physical_groups import get_grid_groups_axelrod
+from socialtoolkit.algorithm.analysis.cultural_groups import get_amount_cultural_groups
 
 from socialtoolkit.graph.network import Network
 

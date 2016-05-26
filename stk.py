@@ -11,6 +11,7 @@ import argparse
 from multiprocessing import cpu_count
 from time import ctime
 import sys
+from socialtoolkit.errors.parameter_error import ParameterError
 
 
 def work_stk(parameters):
@@ -65,25 +66,30 @@ class STK:
         if type(self.args.repeat) == list:
             self.args.repeat = self.args.repeat[0]
 
+        if len(self.args.gridsize) == 0 or self.args.gridsize[0] < 0:
+            raise ParameterError("Interval for gridsize invalid.", "Interval must be with numbers above or equal to 1!",
+                                 {'gridsize': self.args.gridsize})
+        if len(self.args.traits) == 0 or self.args.traits[0] < 0:
+            raise ParameterError("Interval for traits invalid.", "Interval must be with numbers above or equal to 1!",
+                                 {'traits': self.args.traits})
+        if len(self.args.features) == 0 or self.args.features[0] < 0:
+            raise ParameterError("Interval for features invalid.", "Interval must be with numbers above or equal to 1!",
+                                 {'traits': self.args.features})
+        if len(self.args.klemm_rate) == 0 or self.args.klemm_rate[0] < 0:
+            raise ParameterError("Interval for Klemm rate invalid.", "Interval must be with numbers above or equal to 0!",
+                                 {'traits': self.args.klemm_rate})
+
         # conflicts section
         if self.args.graph_input is not None and len(self.args.gridsize) > 1:
-            # raise ParameterError("Can't load a graph and use multiple gridsizes.", "When using a loaded graph don't set a range for gridsize!", {'gridsize' : len(self.args.gridsize), 'graph_input' : self.args.graph_input})
-            print("Can't load a graph and use multiple gridsizes.", file=sys.stderr)
-            exit(-1)
+            raise ParameterError("Can't load a graph and use multiple gridsizes.", "When using a loaded graph don't set a range for gridsize!", {'gridsize' : len(self.args.gridsize), 'graph_input' : self.args.graph_input})
         if self.args.population_input is not None and (len(self.args.traits) > 1 or len(self.args.features) > 1):
-            # raise ParameterError("Can't load a population file and use information.", "When using a loaded population file don't set a range for features or traits!", {'features' : len(self.args.features), 'traits' : len(self.args.traits), 'population_input' : self.args.population_input})
-            print("Can't load a graph and use multiple features or traits.", file=sys.stderr)
-            exit(-1)
+            raise ParameterError("Can't load a population file and use information.", "When using a loaded population file don't set a range for features or traits!", {'features' : len(self.args.features), 'traits' : len(self.args.traits), 'population_input' : self.args.population_input})
 
         # incoherent values
         if self.args.analysis_step < 0:
-            # raise ParameterError("Interval for analysis step invalid.", "Interval for analysis step must be an integer above 1!", {'repeat' : self.args.analysis_step})
-            print("Interval for analysis step invalid - must be an integer above 1.", file=sys.stderr)
-            exit(-1)
+            raise ParameterError("Interval for analysis step invalid.", "Interval for analysis step must be an integer above or equal to 1!", {'repeat': self.args.analysis_step})
         if self.args.repeat <= 0:
-            # raise ParameterError("Number of repeats invalid.", "Number of repeats must be an integer equal or above 1!", {'repeat' : self.args.repeat})
-            print("Number of repeats invalid - must be an integer equal or above 1.", file=sys.stderr)
-            exit(-1)
+            raise ParameterError("Number of repeats invalid.", "Number of repeats must be an integer equal or above 1!", {'repeat' : self.args.repeat})
 
         # store all the parameters for execution
         self.all_P = self.__exec_params(self.args)
@@ -223,9 +229,7 @@ class STK:
             val = val[0]
         val = val.lower()
         if val != 'axelrod' and val != 'centola' and val != 'klemm':
-            # raise ParameterError("Invalid name of algorithm.", "Algorithm must be either Axelrod, Centola or Klemm!", {'given algorithm' : val})
-            print("Invalid name for algorithm '" + val + "'.", file=sys.stderr)
-            exit(-1)
+            raise ParameterError("Invalid name of algorithm.", "Algorithm must be either Axelrod, Centola or Klemm!", {'given algorithm' : val})
         return val
 
     def __exec_params(self, args):

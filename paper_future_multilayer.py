@@ -14,8 +14,9 @@ from socialtoolkit.algorithm import Convergence
 from socialtoolkit.algorithm.evolution import MultilayerCentola
 from socialtoolkit.algorithm.analysis import CommandAnalysis, AmountIterationLayerAnalysis, OutputAnalysis
 
-from socialtoolkit.algorithm.analysis.graph_util import get_amount_physical_groups, get_size_biggest_physical_groups
-from socialtoolkit.algorithm.analysis.util import get_amount_cultural_groups_layer, get_amount_cultural_groups, overlap_similarity_layer
+from socialtoolkit.algorithm.analysis.physical_groups import get_amount_physical_groups, get_size_biggest_physical_groups
+from socialtoolkit.algorithm.analysis.cultural_groups import get_amount_cultural_groups_layer, get_amount_cultural_groups
+from socialtoolkit.algorithm.analysis.util import overlap_similarity_layer
 
 from socialtoolkit.graph.network import Network
 
