@@ -41,11 +41,11 @@ def run():
                 CommandAnalysis(0, step_analysis, get_amount_cultural_groups, [experiment._population])]
     experiment.add_analysis(analysis)
 
-    print(experiment.converge())
+    return experiment.converge()
     # print "final", get_grid_groups(experiment._G, experiment._population)
     # print "final", get_amount_cultural_groups(experiment._population)
-    print("get_grid_groups_axelrod:", analysis[0].get_results())
-    print("get_amount_cultural_groups:", analysis[1].get_results())
+    # print("get_grid_groups_axelrod:", analysis[0].get_results())
+    # print("get_amount_cultural_groups:", analysis[1].get_results())
 
 if __name__ == "__main__":
     run()

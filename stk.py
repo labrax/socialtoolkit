@@ -12,6 +12,7 @@ from multiprocessing import cpu_count
 from time import ctime
 import sys
 from socialtoolkit.errors.parameter_error import ParameterError
+from socialtoolkit.worker import valid_algorithms
 
 
 def work_stk(parameters):
@@ -228,8 +229,8 @@ class STK:
         if type(val) == list:
             val = val[0]
         val = val.lower()
-        if val != 'axelrod' and val != 'centola' and val != 'klemm':
-            raise ParameterError("Invalid name of algorithm.", "Algorithm must be either Axelrod, Centola or Klemm!", {'given algorithm' : val})
+        if val not in valid_algorithms:
+            raise ParameterError("Invalid name of algorithm.", "Algorithm must be either {0} or {1}!".format(", ".join([x.capitalize() for x in valid_algorithms[:-1]]), valid_algorithms[-1].capitalize()), {'given algorithm': val})
         return val
 
     def __exec_params(self, args):

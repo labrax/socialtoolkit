@@ -1,13 +1,13 @@
 #!/usr/bin/python
 
-import unittest
-
 from stk import STK
 from paper_axelrod1997 import run as axelrodrun
 from paper_future_multilayer import run as multilayerrun
 from socialtoolkit.worker import work
-import sys
 from socialtoolkit.errors.parameter_error import ParameterError
+import unittest
+import sys
+
 
 class STKtests(unittest.TestCase):
     def test_executions(self):
@@ -33,10 +33,26 @@ class STKtests(unittest.TestCase):
         self.assertRaisesRegexp(ParameterError, "gridsize", lambda: STK())
 
 
+class CulturalGroupsTopology(unittest.TestCase):
+    def test_relation_1_2_1(self):
+        from socialtoolkit.graph.network import Network, graph_from_file, population_from_file
+        from socialtoolkit.algorithm.analysis.cultural_groups import get_info_cultural_groups_topology
+        network = Network(graph_from_file("examples_and_tests/graph_cultural_groups_topology.el"),
+                          population_from_file("examples_and_tests/graph_cultural_groups_topology.pd"), 1)
+        self.assertEqual(get_info_cultural_groups_topology(network.graph, network.population_data), [(1, (0.0,)), (1, (0.0,)), (2, (1.0,))])
+
+    def test_relation_4(self):
+        from socialtoolkit.graph.network import Network, graph_from_file, population_from_file
+        from socialtoolkit.algorithm.analysis.cultural_groups import get_info_cultural_groups_topology
+        network = Network(graph_from_file("examples_and_tests/graph_cultural_groups_topology.el"),
+                          population_from_file("examples_and_tests/graph_cultural_groups_topology_equal.pd"), 1)
+        self.assertEqual(get_info_cultural_groups_topology(network.graph, network.population_data), [(4, (1.0,))])
+
+
 class PaperTests(unittest.TestCase):
     def test_paper_axelrod(self):
         try:
-            axelrodrun()
+            self.assertGreater(axelrodrun(), 10001)
         except Exception as e:
             self.fail("Axelrod's run raised Exception" + e)
 

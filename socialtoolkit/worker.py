@@ -10,18 +10,18 @@ from __future__ import print_function
 from .algorithm import Convergence
 from .graph import normal_distribution, population_from_file, graph_from_file
 from .social_experiment import Experiment, EqualMultilayerExperiment
-
 from .algorithm.analysis import CommandAnalysis, AmountIterationLayerAnalysis, OutputAnalysis
 from .algorithm.analysis.physical_groups import get_amount_physical_groups, get_size_biggest_physical_groups, get_amount_physical_groups_unify, get_size_biggest_physical_groups_unify
 from .algorithm.analysis.cultural_groups import get_amount_cultural_groups, get_size_biggest_cultural_groups, get_amount_cultural_groups_layer, get_size_biggest_cultural_groups_layer
 from .algorithm.analysis.util import overlap_similarity_layer
-
 from .algorithm.evolution import Axelrod, Centola, Klemm, MultilayerAxelrod, MultilayerCentola, MultilayerKlemm
+from .graph.network import Network
 
 import networkx as nx
 from time import time
 
-from .graph.network import Network
+
+valid_algorithms = ['axelrod', 'centola', 'klemm']
 
 
 def work(parameters):
@@ -54,8 +54,7 @@ def work(parameters):
     population_input = global_parameters['population_input']
     graph_input = global_parameters['graph_input']
 
-
-    if layers > 1: ##FIX ###############################################################################################
+    if layers > 1:
         if evolution_algorithm == 'axelrod':
             evolution_algorithm = MultilayerAxelrod
         elif evolution_algorithm == 'centola':
