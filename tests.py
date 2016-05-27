@@ -41,6 +41,14 @@ class CulturalGroupsTopology(unittest.TestCase):
                           population_from_file("examples_and_tests/graph_cultural_groups_topology.pd"), 1)
         self.assertEqual(get_info_cultural_groups_topology(network.graph, network.population_data), [(1, (0.0,)), (1, (0.0,)), (2, (1.0,))])
 
+    def test_relation_1_2_1_2features(self):
+        from socialtoolkit.graph.network import Network, graph_from_file, population_from_file
+        from socialtoolkit.algorithm.analysis.cultural_groups import get_info_cultural_groups_topology
+        network = Network(graph_from_file("examples_and_tests/graph_cultural_groups_topology.el"),
+                          population_from_file("examples_and_tests/graph_cultural_groups_topology_2features.pd"), 1)
+        self.assertEqual(get_info_cultural_groups_topology(network.graph, network.population_data),
+                         [(1, (0.0, 0.0)), (1, (0.0, 0.0)), (2, (1.0, 0.0))])
+
     def test_relation_4(self):
         from socialtoolkit.graph.network import Network, graph_from_file, population_from_file
         from socialtoolkit.algorithm.analysis.cultural_groups import get_info_cultural_groups_topology

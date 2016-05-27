@@ -25,7 +25,7 @@ def _plain_bfs(graph, population, is_grid, num_side, source, source_features):
                 this_features = population[v[0] * num_side + v[1]]
             else:
                 this_features = population[v]
-            if v not in seen and this_features == source_features:
+            if v not in seen and (this_features == source_features).all():
                 seen.add(v)
                 amt += 1
                 nextlevel.update(graph[v])
