@@ -42,13 +42,13 @@ def run():
     experiment = EqualMultilayerExperiment(Network(all_G, population, layers), evolution_algorithm, convergence, layers)
 
     analysis = [
-        CommandAnalysis(0, step_analysis, get_amount_physical_groups, [experiment.all_G[0]]),
-        CommandAnalysis(0, step_analysis, get_amount_physical_groups, [experiment.all_G[1]]),
-        CommandAnalysis(0, step_analysis, get_amount_physical_groups, [experiment.all_G[2]]),
-        CommandAnalysis(0, step_analysis, get_amount_cultural_groups_layer, [experiment._population, 0, layers]),
-        CommandAnalysis(0, step_analysis, get_amount_cultural_groups_layer, [experiment._population, 1, layers]),
-        CommandAnalysis(0, step_analysis, get_amount_cultural_groups_layer, [experiment._population, 2, layers]),
-        CommandAnalysis(0, step_analysis, get_amount_cultural_groups, [experiment._population]),
+        CommandAnalysis(0, step_analysis, get_amount_physical_groups, [experiment.network, 0]),
+        CommandAnalysis(0, step_analysis, get_amount_physical_groups, [experiment.network, 1]),
+        CommandAnalysis(0, step_analysis, get_amount_physical_groups, [experiment.network, 2]),
+        CommandAnalysis(0, step_analysis, get_amount_cultural_groups_layer, [experiment.network, 0]),
+        CommandAnalysis(0, step_analysis, get_amount_cultural_groups_layer, [experiment.network, 1]),
+        CommandAnalysis(0, step_analysis, get_amount_cultural_groups_layer, [experiment.network, 2]),
+        CommandAnalysis(0, step_analysis, get_amount_cultural_groups, [experiment.network]),
         AmountIterationLayerAnalysis(experiment._curr, layers)]
     experiment.add_analysis(analysis)
     for i in range(0, layers):

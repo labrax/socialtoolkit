@@ -8,14 +8,17 @@ import networkx as nx
 from math import sqrt
 import bisect
 
+from socialtoolkit.graph import Network
 
-def get_grid_groups_axelrod(G, population):
-    """Returns the amount of cultural groups for a grid in relation to its neighbors.
 
-    Args:
-        G (networkx.classes.graph): the graph.
-        population (list of list): the features and traits of the population."""
-    height = width = int(sqrt(len(nx.nodes(G))))
+def get_grid_groups_axelrod(network, curr_layer=0):
+    """
+    Returns the amount of cultural groups for a grid in relation to its neighbors.
+    :param network: the network data.
+    :param curr_layer: the layer under analysis.
+    """
+    height = width = int(sqrt(len(nx.nodes(network.graph[curr_layer]))))
+    population = network.population_data
 
     amount_components = 0
     for y in range(0, height):
@@ -48,11 +51,11 @@ def get_grid_groups_axelrod(G, population):
 
 
 def _plain_bfs(graph, source):
-    """Returns the amount of nodes explored and the nodes seen from a source node using BFS.
-
-    Args:
-        graph (networkx.classes.graph): the graph.
-        source (networkx.classes.nodes): the source node."""
+    """
+    Returns the amount of nodes explored and the nodes seen from a source node using BFS.
+    :param graph (networkx.classes.graph): the graph.
+    :param source (networkx.classes.nodes): the source node.
+    """
     seen = set()
     amt = 0
     nextlevel = {source}
@@ -67,83 +70,88 @@ def _plain_bfs(graph, source):
     return amt, seen
 
 
-def fast_get_connected_components(graph):
-    """Returns a list with the sizes of each physical group.
-
-    Args:
-        graph (networkx.classes.graph): the graph."""
+def fast_get_connected_components(network, curr_layer=0):
+    """
+    Returns a list with the sizes of each physical group.
+    :param network: the network data.
+    :param curr_layer: the layer under analysis.
+    """
     sizes = list()
     seen = set()
-    for v in graph:
+    for v in network.graph[curr_layer]:
         if v not in seen:
-            (amt, c) = _plain_bfs(graph, v)
+            (amt, c) = _plain_bfs(network.graph[curr_layer], v)
             bisect.insort_left(sizes, amt)
             seen.update(c)
     return sizes
 
 
-def has_path(graph, node1, node2):
-    """Returns True if there is a path between 2 nodes.
-
-    Args:
-        graph (networkx.classes.graph): the graph.
-        node1 (networkx.classes.nodes): the source node.
-        node2 (networkx.classes.nodes): the target node."""
+def has_path(network, node1, node2, curr_layer=0):
+    """
+    Returns True if there is a path between 2 nodes.
+    :param network: the network data.
+    :param node1 (networkx.classes.nodes): the source node.
+    :param node2 (networkx.classes.nodes): the target node.
+    :param curr_layer: the layer under analysis.
+    """
     try:
-        nx.algorithms.shortest_paths._bidirectional_pred_succ(graph, node1, node2)
+        nx.algorithms.shortest_paths._bidirectional_pred_succ(network.graph[curr_layer], node1, node2)
         return True
     except:
         return False
 
 
-def get_amount_physical_groups(graph):
-    """Returns the amount of physical groups.
-
-    Args:
-        graph (networkx.classes.graph): the graph."""
-    return len(fast_get_connected_components(graph))
-
-
-def get_size_biggest_physical_groups(graph):
-    """Returns the size of the biggest physical group.
-
-    Args:
-        graph (networkx.classes.graph): the graph."""
-    return max(fast_get_connected_components(graph))
+def get_amount_physical_groups(network, curr_layer=0):
+    """
+    Returns the amount of physical groups.
+    :param network: the network data.
+    :param curr_layer: the layer under analysis.
+    """
+    return len(fast_get_connected_components(network, curr_layer))
 
 
-def get_info_physical_groups(graph):
-    """Returns the amount of physical groups and the biggest one.
+def get_size_biggest_physical_groups(network, curr_layer=0):
+    """
+    Returns the size of the biggest physical group.
+    :param network: the network data.
+    :param curr_layer: the layer under analysis.
+    """
+    return max(fast_get_connected_components(network, curr_layer))
 
-    Args:
-        graph (networkx.classes.graph): the graph list."""
-    info = fast_get_connected_components(graph)
+
+def get_info_physical_groups(network, curr_layer=0):
+    """
+    Returns the amount of physical groups and the biggest one.
+    :param network: the network data.
+    :param curr_layer: the layer under analysis.
+    """
+    info = fast_get_connected_components(network, curr_layer)
     return len(info), max(info)
 
 
-def get_amount_physical_groups_unify(graph):
-    """Returns the amount of physical groups unifying layers.
-
-    Args:
-        graph (list of networkx.classes.graph): the graph list."""
-    new_graph = nx.compose_all(graph)
-    return len(fast_get_connected_components(new_graph))
-
-
-def get_size_biggest_physical_groups_unify(graph):
-    """Returns the size of the biggest physical group unifying layers.
-
-    Args:
-        graph (list of networkx.classes.graph): the graph list."""
-    new_graph = nx.compose_all(graph)
-    return max(fast_get_connected_components(new_graph))
+def get_amount_physical_groups_unify(network):
+    """
+    Returns the amount of physical groups unifying layers.
+    :param network: the network data.
+    """
+    new_network = Network(nx.compose_all(network.graph), list(), 0)
+    return len(fast_get_connected_components(new_network))
 
 
-def get_info_physical_groups_unify(graph):
-    """Returns the amount of physical groups and the biggest one unifying layers.
+def get_size_biggest_physical_groups_unify(network):
+    """
+    Returns the size of the biggest physical group unifying layers.
+    :param network: the network data.
+    """
+    new_network = Network(nx.compose_all(network.graph), list(), 0)
+    return max(fast_get_connected_components(new_network))
 
-    Args:
-        graph (list of networkx.classes.graph): the graph list."""
-    new_graph = nx.compose_all(graph)
-    info = fast_get_connected_components(new_graph)
+
+def get_info_physical_groups_unify(network):
+    """
+    Returns the amount of physical groups and the biggest one unifying layers.
+    :param network: the network data.
+    """
+    new_network = Network(nx.compose_all(network.graph), list(), 0)
+    info = fast_get_connected_components(new_network)
     return len(info), max(info)

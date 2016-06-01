@@ -22,8 +22,9 @@ class Experiment(object):
             evolution_algorithm (socialtoolkit.algorithm.evolution.evolution_algorithm generator): the evolution generator.
             convergence (socialtoolkit.algorithm.convergence): the convergence criteria for the experiment."""
         if network:
-            self._G = network.graph
+            self._G = network.graph[0]
             self._population = network.population_data
+            self.network = network
         if evolution_algorithm:
             if evolution_algorithm.__name__ == "Klemm":
                 self._model = evolution_algorithm(self._G, self._population, parameters['traits'], parameters['klemm_rate'])
@@ -87,6 +88,7 @@ class EqualMultilayerExperiment(Experiment):
             convergence (socialtoolkit.algorithm.convergence): the convergence criteria for the experiment.
             layers (int): the amount of layers."""
         super(EqualMultilayerExperiment, self).__init__(network, None, convergence)
+        self.network = network
         self.all_G = network.graph
         self.all_model = []
         for i in network.graph:

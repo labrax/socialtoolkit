@@ -379,7 +379,9 @@ class STK:
     def write_global_data(self, target=sys.stdout):
         if type(target) == str:
             target = open(target, "w")
-        for i,j in self.global_headers.iteritems():
+        values = list(self.global_headers.iteritems())
+        values.sort()
+        for i,j in values:
             if i is None:
                 print("invalid value", file=sys.stderr)
             else:
@@ -387,13 +389,20 @@ class STK:
 
     def get_fields_to_print(self):
         important_outputs = ["algorithm", "max_iterations", "step_check", "analysis_step", "layers", "graph_input",
-                             "population_input", "width", "height", "traits", "features", "klemm_rate",
-                             "amount_cultural_groups", "biggest_cultural_group", "amount_physical_groups",
-                             "biggest_physical_group"]
+                             "population_input", "width", "height", "traits", "features", "klemm_rate"]
         will_be_printed = list()
         for i in important_outputs:
             if i not in self.global_headers:
                 will_be_printed.append(i)
+        if self.global_headers['cultural'] == True:
+            will_be_printed.append("amount_cultural_groups")
+        if self.global_headers['biggest_cultural'] == True:
+            will_be_printed.append("biggest_cultural_group")
+        if self.global_headers['physical'] == True:
+            will_be_printed.append("amount_physical_groups")
+        if self.global_headers['biggest_physical'] == True:
+            will_be_printed.append("biggest_physical_group")
+
         if self.args.layers > 1:
             for i in range(self.args.layers):
                 will_be_printed.append("amount_cultural_groups" + str(i))

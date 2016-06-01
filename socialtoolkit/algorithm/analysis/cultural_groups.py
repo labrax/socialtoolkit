@@ -9,6 +9,7 @@ import networkx as nx
 from math import sqrt
 import bisect
 
+from socialtoolkit.graph import Network
 
 """These are functions considering the topology of the graph."""
 
@@ -32,12 +33,13 @@ def _plain_bfs(graph, population, is_grid, num_side, source, source_features):
     return amt, seen
 
 
-def get_info_cultural_groups_topology(graph, population):
-    """Returns a list with the sizes of each physical group.
-
-    Args:
-        graph (networkx.classes.graph): the graph.
-        population (list of list): the features and traits of the population."""
+def get_info_cultural_groups_topology(network, curr_layer=0):
+    """
+    Returns a list with the sizes of each physical group.
+    :param network: the network data.
+    """
+    graph = network.graph[curr_layer]
+    population = network.population_data
     if nx.info(graph).split('\n')[0][6:] == 'grid_2d_graph':
         is_grid = True
         num_side = int(sqrt(len(graph)))
@@ -61,75 +63,83 @@ def get_info_cultural_groups_topology(graph, population):
 """These are functions considering groups that the graph topology doesn't matter."""
 
 
-def _cultural_groups(population):
+def _cultural_groups(network):
+    """
+    Returns the cultural groups analysis data dictionary.
+    :param network:
+    :return:
+    """
     checked = {}
-    for i in population:
+    for i in network.population_data:
         checked[tuple(i)] = checked.get(tuple(i), 0) + 1
     return checked
 
 
-def get_size_biggest_cultural_groups(population):
-    """Returns the size of the biggest cultural group.
-
-    Args:
-        population (list of list): the features and traits of the population."""
-    return max(_cultural_groups(population).values())
-
-
-def get_amount_cultural_groups(population):
-    """Returns the amount of cultural groups.
-
-    Args:
-        population (list of list): the features and traits of the population."""
-    return len(_cultural_groups(population))
+def get_size_biggest_cultural_groups(network):
+    """
+    Returns the size of the biggest cultural group.
+    :param network: the network data.
+    """
+    return max(_cultural_groups(network).values())
 
 
-def get_info_cultural_groups(population):
-    """Returns the amount of cultural groups and the biggest one.
+def get_amount_cultural_groups(network):
+    """
+    Returns the amount of cultural groups.
+    :param network: the network data.
+    """
+    return len(_cultural_groups(network))
 
-    Args:
-        population (list of list): the features and traits of the population."""
-    info = _cultural_groups(population)
+
+def get_info_cultural_groups(network):
+    """
+    Returns the amount of cultural groups and the biggest one.
+    :param network: the network data.
+    """
+    info = _cultural_groups(network)
     return len(info), max(info.values())
 
 """Multilayers below"""
 
 
-def _cultural_groups_layer(population, curr_layer, amount_layers):
-    layer_size = len(population[0]) / amount_layers
+def _cultural_groups_layer(network, curr_layer):
+    """
+    Returns the amount of cultural groups for a layer.
+    :param network: the network data.
+    :param curr_layer: the layer under analysis.
+    :return: dictionary with data.
+    """
+    layer_size = len(network.population_data[0]) / network.layers
     checked = {}
-    for i in population:
-        checked[tuple(i[layer_size * curr_layer: layer_size * (curr_layer + 1)])] = \
-            checked.get(tuple(i[layer_size * curr_layer: layer_size * (curr_layer + 1)]), 0) + 1
+    for i in network.population_data:
+        checked[tuple(i[int(layer_size * curr_layer) : int(layer_size * (curr_layer + 1))])] = \
+            checked.get(tuple(i[int(layer_size * curr_layer) : int(layer_size * (curr_layer + 1))]), 0) + 1
     return checked
 
 
-def get_size_biggest_cultural_groups_layer(population, curr_layer, amount_layers):
-    """Returns the size of the biggest cultural group considering only a layer.
-
-    Args:
-        population (list of list): the features and traits of the population.
-        curr_layer (int): the current layer being operated.
-        amount_layers (int): the total amount of layers."""
-    return max(_cultural_groups_layer(population, curr_layer, amount_layers).values())
-
-
-def get_amount_cultural_groups_layer(population, curr_layer, amount_layers):
-    """Returns the amount of cultural groups considering only a layer.
-
-    Args:
-        population (list of list): the features and traits of the population.
-        curr_layer (int): the current layer being operated.
-        amount_layers (int): the total amount of layers."""
-    return len(_cultural_groups_layer(population, curr_layer, amount_layers))
+def get_size_biggest_cultural_groups_layer(network, curr_layer):
+    """
+    Returns the size of the biggest cultural group considering only a layer.
+    :param network: the network data.
+    :param curr_layer: the layer under analysis.
+    """
+    return max(_cultural_groups_layer(network, curr_layer).values())
 
 
-def get_info_cultural_groups_layer(population, curr_layer, amount_layers):
-    """Returns the amount of cultural groups and the biggest one considering only a layer.
+def get_amount_cultural_groups_layer(network, curr_layer):
+    """
+    Returns the amount of cultural groups considering only a layer.
+    :param network: the network data.
+    :param curr_layer: the layer under analysis.
+    """
+    return len(_cultural_groups_layer(network, curr_layer))
 
-    Args:
-        population (list of list): the features and traits of the population.
-        curr_layer (int): the current layer being operated.
-        amount_layers (int): the total amount of layers."""
-    info = _cultural_groups_layer(population, curr_layer, amount_layers)
+
+def get_info_cultural_groups_layer(network, curr_layer):
+    """
+    Returns the amount of cultural groups and the biggest one considering only a layer.
+    :param network: the network data.
+    :param curr_layer: the current layer being operated.
+    """
+    info = _cultural_groups_layer(network, curr_layer)
     return len(info), max(info.values())
