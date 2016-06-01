@@ -9,12 +9,10 @@ import networkx as nx
 from math import sqrt
 import bisect
 
-from socialtoolkit.graph import Network
-
-"""These are functions considering the topology of the graph."""
+"""These functions consider the topology of the graph."""
 
 
-def _plain_bfs(graph, population, is_grid, num_side, source, source_features):
+def _plain_bfs(graph, population, is_grid, num_side, source, source_features, first_feature, last_feature):
     seen = set()
     amt = 0
     nextlevel = {source}
@@ -26,19 +24,22 @@ def _plain_bfs(graph, population, is_grid, num_side, source, source_features):
                 this_features = population[v[0] * num_side + v[1]]
             else:
                 this_features = population[v]
-            if v not in seen and (this_features == source_features).all():
+            if v not in seen and \
+                    (this_features[first_feature:last_feature] == source_features[first_feature:last_feature]).all():
                 seen.add(v)
                 amt += 1
                 nextlevel.update(graph[v])
     return amt, seen
 
 
-def get_info_cultural_groups_topology(network, curr_layer=0):
+def _cultural_groups_topology(network, first_feature=0, last_feature=-1):
     """
     Returns a list with the sizes of each physical group.
     :param network: the network data.
     """
-    graph = network.graph[curr_layer]
+    if last_feature == -1:
+        last_feature = len(network.population_data[0])
+    graph = network.graph[0]
     population = network.population_data
     if nx.info(graph).split('\n')[0][6:] == 'grid_2d_graph':
         is_grid = True
@@ -54,13 +55,66 @@ def get_info_cultural_groups_topology(network, curr_layer=0):
                 features = population[v[0] * num_side + v[1]]
             else:
                 features = population[v]
-
-            (amt, c) = _plain_bfs(graph, population, is_grid, num_side, v, features)
+            (amt, c) = _plain_bfs(graph, population, is_grid, num_side, v, features, first_feature, last_feature)
             bisect.insort_left(sizes, (amt, tuple(features)))
             seen.update(c)
     return sizes
 
-"""These are functions considering groups that the graph topology doesn't matter."""
+
+def get_size_biggest_cultural_groups_topology(network):
+    """
+    Returns the size of the biggest cultural group.
+    :param network: the network data.
+    :return: the size
+    """
+    return get_info_cultural_groups_topology(network)[-1][0]
+
+
+def get_amount_cultural_groups_topology(network):
+    """
+    Return sthe amount of cultural groups.
+    :param network: the network data.
+    :return: the amount of cultural groups.
+    """
+    return len(get_info_cultural_groups_topology(network))
+
+
+def get_info_cultural_groups_topology(network):
+    """
+    Returns the amount of cultural groups and the biggest one considering the topology.
+    :param network: the network data.
+    :return: the amount of cultural groups and the size of the biggest cultural group.
+    """
+    info = _cultural_groups_topology(network)
+    return len(info), info[-1][0]
+
+########################################################################################################################
+"""Multilayer for the topology analysis"""
+
+
+def get_size_biggest_cultural_groups_topology_layer(network, curr_layer):
+    """
+    Returns the size of the biggest cultural group.
+    :param network: the network data.
+    :param curr_layer: the layer under analysis.
+    :return: the size of the biggest cultural group.
+    """
+    layer_size = len(network.population_data[0]) / network.layers
+    return _cultural_groups_topology(network, int(layer_size * curr_layer), int(layer_size * (curr_layer + 1)))[-1][0]
+
+
+def get_amount_cultural_groups_topology_layer(network, curr_layer):
+    """
+    Returns the amount of cultural groups.
+    :param network: the network data.
+    :param curr_layer: the layer under analysis.
+    :return: the amount of cultural groups.
+    """
+    layer_size = len(network.population_data[0]) / network.layers
+    return len(_cultural_groups_topology(network, int(layer_size * curr_layer), int(layer_size * (curr_layer + 1))))
+
+########################################################################################################################
+"""The functions below consider groups where the graph topology doesn't matter."""
 
 
 def _cultural_groups(network):
@@ -99,6 +153,7 @@ def get_info_cultural_groups(network):
     info = _cultural_groups(network)
     return len(info), max(info.values())
 
+########################################################################################################################
 """Multilayers below"""
 
 
@@ -112,8 +167,8 @@ def _cultural_groups_layer(network, curr_layer):
     layer_size = len(network.population_data[0]) / network.layers
     checked = {}
     for i in network.population_data:
-        checked[tuple(i[int(layer_size * curr_layer) : int(layer_size * (curr_layer + 1))])] = \
-            checked.get(tuple(i[int(layer_size * curr_layer) : int(layer_size * (curr_layer + 1))]), 0) + 1
+        checked[tuple(i[int(layer_size * curr_layer): int(layer_size * (curr_layer + 1))])] = \
+            checked.get(tuple(i[int(layer_size * curr_layer): int(layer_size * (curr_layer + 1))]), 0) + 1
     return checked
 
 
