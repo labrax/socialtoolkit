@@ -15,7 +15,7 @@ from .algorithm.analysis.physical_groups import get_amount_physical_groups, get_
 from .algorithm.analysis.cultural_groups import get_amount_cultural_groups, get_size_biggest_cultural_groups, get_amount_cultural_groups_layer, get_size_biggest_cultural_groups_layer
 from .algorithm.analysis.util import overlap_similarity_layer
 from .algorithm.evolution import Axelrod, Centola, Klemm, MultilayerAxelrod, MultilayerCentola, MultilayerKlemm
-from .graph.network import Network
+from .graph.network import Network, graph_to_file, population_to_file
 
 import networkx as nx
 from time import time
@@ -54,6 +54,9 @@ def work(parameters):
     population_input = global_parameters['population_input']
     graph_input = global_parameters['graph_input']
 
+    population_output = global_parameters['population_output']
+    graph_output = global_parameters['graph_output']
+
     if layers > 1:
         if evolution_algorithm == 'axelrod':
             evolution_algorithm = MultilayerAxelrod
@@ -69,7 +72,7 @@ def work(parameters):
         elif evolution_algorithm == 'klemm':
             evolution_algorithm = Klemm
 
-    this_name = "output_gs{0}_f{1}_t{2}_l{3}_{4}.csv".format(width, features, traits, layers, evolution_algorithm.__name__)
+    this_name = "output_gs{0}_f{1}_t{2}_l{3}_{4}".format(width, features, traits, layers, evolution_algorithm.__name__)
     analysis = []
     headers = ['iteration']
 
@@ -127,7 +130,7 @@ def work(parameters):
                     if biggest_cultural:
                         analysis.append(CommandAnalysis(0, analysis_step, get_size_biggest_cultural_groups_layer, [network, i]))
                         headers.append(str(i) + 'biggest_cultural_groups')
-                    # analysis.append(AmountIterationLayerAnalysis(experiment._curr, layers))##to enable fix OutputAnalysis to not use, and return on results
+                        # analysis.append(AmountIterationLayerAnalysis(experiment._curr, layers))##to enable fix OutputAnalysis to not use, and return on results
             experiment.add_analysis(analysis)
     else:
         if type(graph_input) == str:
@@ -158,8 +161,13 @@ def work(parameters):
     results['convergence_time'] = end-start
 
     if analysis_step > 0:
-        oa = OutputAnalysis(analysis, headers, output=output_dir+this_name)
+        oa = OutputAnalysis(analysis, headers, output=output_dir+this_name+".csv")
         oa.write()
+
+    if graph_output:
+        graph_to_file(network, this_name + ".el")
+    if population_output:
+        population_to_file(network, this_name + ".pd")
 
     if layers > 1:  # final results data
         if physical:

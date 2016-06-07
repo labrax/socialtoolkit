@@ -155,10 +155,10 @@ class STK:
                             help='an input graph file')
         parser.add_argument('-OP', '--output-population', metavar='POPULATION-OUTPUT', dest='population_output',
                             action='store_const', const=True, default=False,
-                            help='DISABLED - an output population file')
+                            help='an output population file')
         parser.add_argument('-OG', '--output-graph', metavar='GRAPH-OUTPUT', dest='graph_output',
                             action='store_const', const=True, default=False,
-                            help='DISABLED - an output graph file')
+                            help='an output graph file')
         # other settings
         parser.add_argument('-R', '--repeat', metavar='N', dest='repeat', default=1, type=int, nargs=1,
                             help='number of runs for each setting')
@@ -265,6 +265,9 @@ class STK:
 
         global_parameters['graph_input'] = args.graph_input
         global_parameters['population_input'] = args.population_input
+
+        global_parameters['graph_output'] = args.graph_output
+        global_parameters['population_output'] = args.population_output
 
         self.global_headers = global_parameters.copy()
         self.global_headers['repeat'] = args.repeat
@@ -389,7 +392,8 @@ class STK:
 
     def get_fields_to_print(self):
         important_outputs = ["algorithm", "max_iterations", "step_check", "analysis_step", "layers", "graph_input",
-                             "population_input", "width", "height", "traits", "features", "klemm_rate"]
+                             "population_input", "width", "height", "traits", "features", "klemm_rate",
+                             "graph_output", "population_output"]
         will_be_printed = list()
         for i in important_outputs:
             if i not in self.global_headers:

@@ -65,6 +65,46 @@ def graph_from_file(file_name, curr_layer=0, amount_layers=0):
     return G
 
 
+def graph_to_file(network, file_name, print_amount_nodes=True, delimeter=","):
+    """
+
+    :param network:
+    :param file_name:
+    :param print_amount_nodes:
+    :param delimeter:
+    :return:
+    """
+    output_f = open(file_name, 'w')
+
+    new_network = nx.compose_all(network.graph)
+    nodes = dict()
+    i = 0
+    for n in new_network.nodes():
+        nodes[n] = i
+        i += 1
+    if print_amount_nodes:
+        output_f.write(str(i) + "\n")
+    for e1, e2 in new_network.edges():
+        output_f.write(delimeter.join([str(nodes[e1]), str(nodes[e2])]) + "\n")
+    output_f.close()
+
+
+def population_to_file(network, file_name):
+    """
+
+    :param network:
+    :param file_name:
+    :return:
+    """
+    output_f = open(file_name, 'w')
+    for index in range(len(network.population_data)):
+        values = list()
+        for v in network.population_data[index]:
+            values.append(str(int(v)))
+        output_f.write(str(index) + "," + ",".join(values) + "\n")
+    output_f.close()
+
+
 def population_from_file(file_name):
     """Returns a loaded population (list of list) from a file information.
     
