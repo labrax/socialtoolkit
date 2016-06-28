@@ -37,6 +37,8 @@ def work(parameters):
 
     global_parameters = parameters['global_parameters']
 
+    directed = global_parameters['directed_graph']
+
     max_iterations = global_parameters['max_iterations']
     step_check = global_parameters['step_check']
     layers = global_parameters['layers']
@@ -96,9 +98,12 @@ def work(parameters):
         all_graphs = []
         for i in range(layers):
             if type(graph_input) == str:
-                all_graphs.append(graph_from_file(graph_input, i, layers))
+                all_graphs.append(graph_from_file(graph_input, directed, i, layers))
             else:
-                all_graphs.append(nx.grid_2d_graph(width, height))
+                if directed:
+                    all_graphs.append(nx.grid_2d_graph(width, height).to_directed())
+                else:
+                    all_graphs.append(nx.grid_2d_graph(width, height))
         network = Network(all_graphs, population, layers)
         experiment = EqualMultilayerExperiment(network, evolution_algorithm, convergence, layers, **parameters)
         for i in range(0, layers):
@@ -134,9 +139,12 @@ def work(parameters):
             experiment.add_analysis(analysis)
     else:
         if type(graph_input) == str:
-            graph = graph_from_file(graph_input)
+            graph = graph_from_file(graph_input, directed)
         else:
-            graph = nx.grid_2d_graph(width, height)
+            if directed:
+                graph = nx.grid_2d_graph(width, height).to_directed()
+            else:
+                graph = nx.grid_2d_graph(width, height)
         network = Network(graph, population, layers)
         experiment = Experiment(network, evolution_algorithm, convergence, **parameters)
         if analysis_step > 0:

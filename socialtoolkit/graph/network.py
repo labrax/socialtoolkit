@@ -40,14 +40,18 @@ class Network(object):
             self.id = 0
 
 
-def graph_from_file(file_name, curr_layer=0, amount_layers=0):
+def graph_from_file(file_name, directed=False, curr_layer=0, amount_layers=0):
     """Returns a loaded graph (nx.classes.graph) from an edge file.
     
     Args:
         file_name (str): the file for input.
+        directed (bool): whether the graph is directed or not.
         curr_layer (Optional[int]): the current layer index.
         amount_layers (Optional[int]): the amount of layers."""
-    G = nx.Graph()
+    if directed:
+        G = nx.DiGraph()
+    else:
+        G = nx.Graph()
     f = open(file_name, "r")
     header = False
     for line in f:
@@ -78,12 +82,12 @@ def graph_to_file(network, file_name, print_amount_nodes=True, delimeter=","):
 
     new_network = nx.compose_all(network.graph)
     nodes = dict()
-    i = 0
+    i = 1
     for n in new_network.nodes():
         nodes[n] = i
         i += 1
     if print_amount_nodes:
-        output_f.write(str(i) + "\n")
+        output_f.write(str(i-1) + "\n")
     for e1, e2 in new_network.edges():
         output_f.write(delimeter.join([str(nodes[e1]), str(nodes[e2])]) + "\n")
     output_f.close()
@@ -101,7 +105,7 @@ def population_to_file(network, file_name):
         values = list()
         for v in network.population_data[index]:
             values.append(str(int(v)))
-        output_f.write(str(index) + "," + ",".join(values) + "\n")
+        output_f.write(str(index+1) + "," + ",".join(values) + "\n")
     output_f.close()
 
 
