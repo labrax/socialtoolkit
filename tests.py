@@ -32,6 +32,10 @@ class STKtests(unittest.TestCase):
         sys.argv = ['./stk.py', '-gs', '-5', '-f', '2', '-t', '2', '-cI', '150000', '-SA', '50']
         self.assertRaisesRegexp(ParameterError, "gridsize", lambda: STK())
 
+    def test_no_parameter(self):
+        sys.argv = ['./stk.py', '-f', '2', '-l', '3']
+        self.assertRaisesRegexp(ParameterError, "Invalid", lambda: STK())
+
 
 class CulturalGroupsTopology(unittest.TestCase):
     def test_relation_1_2_1(self):
