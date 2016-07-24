@@ -150,7 +150,7 @@ class STK:
         parser.add_argument('-SA', '--analysis-step', metavar='N', dest='analysis_step', default=0, type=int, nargs=1,
                             help='an interval for the analysis')
         parser.add_argument('-OA', '--analysis-output', metavar='OUTPUT-DIR', dest='output_dir', default="/userdata/vroth/output_data/run_" + str(self.run_id), type=str, nargs=1,
-                            help='a folder for the output of analysis')
+                            help='a folder for the output of analysis - be sure to set -SA or --analysis-step for this option be used')
         # input files for graph and population
         parser.add_argument('-IP', '--input-population', metavar='POPULATION-INPUT-FILE', dest='population_input', type=str, nargs=1,
                             help='an input population file')
@@ -308,6 +308,8 @@ class STK:
                             parameters['global_parameters'] = global_parameters
                             parameters['klemm_rate'] = k
                             all_p.append(parameters)
+        if len(all_p) == 0:
+            raise ParameterError("Invalid parameters. I've got not running case.", "Please check all parameters and try again.", {'all': 'or any'})
         return all_p
 
     def __prepare_dir(self, directory):
