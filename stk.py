@@ -114,6 +114,9 @@ class STK:
                             help='a number of layers')
         parser.add_argument('-A', '--algorithm', metavar='<algorithm>', default="axelrod", type=str, nargs=1,
                             help='an simulation algorithm, "axelrod", "centola" or "kleem"')
+        parser.add_argument('-DG', '--directed_graph', metavar='DG', dest='directed_graph',
+                            action='store_const', const=True, default=False,
+                            help='check whether to use directed or undirected graph')
         # klemm rate
         parser.add_argument('-K', '--klemm-rate', metavar='N', dest='klemm_rate', default=0.01, type=float, nargs='+',
                             help="value for Klemm's rate of perturbation")
@@ -155,10 +158,10 @@ class STK:
                             help='an input graph file')
         parser.add_argument('-OP', '--output-population', metavar='POPULATION-OUTPUT', dest='population_output',
                             action='store_const', const=True, default=False,
-                            help='DISABLED - an output population file')
+                            help='an output population file')
         parser.add_argument('-OG', '--output-graph', metavar='GRAPH-OUTPUT', dest='graph_output',
                             action='store_const', const=True, default=False,
-                            help='DISABLED - an output graph file')
+                            help='an output graph file')
         # other settings
         parser.add_argument('-R', '--repeat', metavar='N', dest='repeat', default=1, type=int, nargs=1,
                             help='number of runs for each setting')
@@ -258,6 +261,8 @@ class STK:
         global_parameters['biggest_physical'] = args.biggest_physical
         global_parameters['biggest_cultural'] = args.biggest_cultural
 
+        global_parameters['directed_graph'] = args.directed_graph
+
         global_parameters['no_layer_by_layer'] = args.no_layer_by_layer
         global_parameters['analysis_step'] = args.analysis_step
         global_parameters['output_dir'] = args.output_dir
@@ -265,6 +270,9 @@ class STK:
 
         global_parameters['graph_input'] = args.graph_input
         global_parameters['population_input'] = args.population_input
+
+        global_parameters['graph_output'] = args.graph_output
+        global_parameters['population_output'] = args.population_output
 
         self.global_headers = global_parameters.copy()
         self.global_headers['repeat'] = args.repeat
@@ -277,6 +285,8 @@ class STK:
             self.global_headers['features'] = args.features[0]
         if len(args.klemm_rate) == 1:
             self.global_headers['klemm_rate'] = args.klemm_rate[0]
+
+        self.global_headers['directed_graph'] = args.directed_graph
 
         # generate all the parameters
         for r in range(args.repeat):
@@ -345,7 +355,7 @@ class STK:
         if hasattr(self, "headers") and self.headers is not None:
             return self.headers
         self.headers = ["algorithm", "width", "height", "layers", "features", "traits", "convergence_max_iterations",
-                        "convergence_step_check", "convergence_iterations", "convergence_time"]
+                        "convergence_step_check", "convergence_iterations", "convergence_time", "directed_graph"]
         if self.args.layers > 1:
             if self.args.physical:
                 self.headers.append("amount_physical_groups")
@@ -379,7 +389,9 @@ class STK:
     def write_global_data(self, target=sys.stdout):
         if type(target) == str:
             target = open(target, "w")
-        for i,j in self.global_headers.iteritems():
+        values = list(self.global_headers.iteritems())
+        values.sort()
+        for i,j in values:
             if i is None:
                 print("invalid value", file=sys.stderr)
             else:
@@ -388,12 +400,20 @@ class STK:
     def get_fields_to_print(self):
         important_outputs = ["algorithm", "max_iterations", "step_check", "analysis_step", "layers", "graph_input",
                              "population_input", "width", "height", "traits", "features", "klemm_rate",
-                             "amount_cultural_groups", "biggest_cultural_group", "amount_physical_groups",
-                             "biggest_physical_group"]
+                             "graph_output", "population_output", "convergence_iterations", "convergence_time"]
         will_be_printed = list()
         for i in important_outputs:
             if i not in self.global_headers:
                 will_be_printed.append(i)
+        if self.global_headers['cultural']:
+            will_be_printed.append("amount_cultural_groups")
+        if self.global_headers['biggest_cultural']:
+            will_be_printed.append("biggest_cultural_group")
+        if self.global_headers['physical']:
+            will_be_printed.append("amount_physical_groups")
+        if self.global_headers['biggest_physical']:
+            will_be_printed.append("biggest_physical_group")
+
         if self.args.layers > 1:
             for i in range(self.args.layers):
                 will_be_printed.append("amount_cultural_groups" + str(i))

@@ -10,27 +10,48 @@ import numpy as np
 import random
 import math
 
+
 class Network(object):
-    """Graph information class."""
-    def __init__(self, graph_data, population_data, layers):
-        """Initiates a network with a graph and it's information of population.
-        
-        Args:
-            graph_data (networkx.classes.graph): the graph.
-            population_data (list of list): information of features and traits."""
-        self.graph = graph_data
+    """
+    Graph information class.
+    """
+    network_ids = 0
+
+    @staticmethod
+    def _new_id():
+        Network.network_ids += 1
+        return Network.network_ids
+
+    def __init__(self, graph_data, population_data, layers, id=True):
+        """
+        Initiates a network with a graph and it's information of population.
+        :param graph_data (networkx.classes.graph): the graph.
+        :param population_data (list of list): information of features and traits.
+        """
+        if type(graph_data) == list:
+            self.graph = graph_data
+        else:
+            self.graph = [graph_data]
         self.population_data = population_data
         self.layers = layers
+        if id:
+            self.id = Network._new_id()
+        else:
+            self.id = 0
 
 
-def graph_from_file(file_name, curr_layer=0, amount_layers=0):
+def graph_from_file(file_name, directed=False, curr_layer=0, amount_layers=0):
     """Returns a loaded graph (nx.classes.graph) from an edge file.
     
     Args:
         file_name (str): the file for input.
+        directed (bool): whether the graph is directed or not.
         curr_layer (Optional[int]): the current layer index.
         amount_layers (Optional[int]): the amount of layers."""
-    G = nx.Graph()
+    if directed:
+        G = nx.DiGraph()
+    else:
+        G = nx.Graph()
     f = open(file_name, "r")
     header = False
     for line in f:
@@ -44,7 +65,48 @@ def graph_from_file(file_name, curr_layer=0, amount_layers=0):
         else:
             data = line.split(",")
             G.add_edge(int(data[0]), int(data[1]))
+    f.close()
     return G
+
+
+def graph_to_file(network, file_name, print_amount_nodes=True, delimeter=","):
+    """
+
+    :param network:
+    :param file_name:
+    :param print_amount_nodes:
+    :param delimeter:
+    :return:
+    """
+    output_f = open(file_name, 'w')
+
+    new_network = nx.compose_all(network.graph)
+    nodes = dict()
+    i = 1
+    for n in new_network.nodes():
+        nodes[n] = i
+        i += 1
+    if print_amount_nodes:
+        output_f.write(str(i-1) + "\n")
+    for e1, e2 in new_network.edges():
+        output_f.write(delimeter.join([str(nodes[e1]), str(nodes[e2])]) + "\n")
+    output_f.close()
+
+
+def population_to_file(network, file_name):
+    """
+
+    :param network:
+    :param file_name:
+    :return:
+    """
+    output_f = open(file_name, 'w')
+    for index in range(len(network.population_data)):
+        values = list()
+        for v in network.population_data[index]:
+            values.append(str(int(v)))
+        output_f.write(str(index+1) + "," + ",".join(values) + "\n")
+    output_f.close()
 
 
 def population_from_file(file_name):
@@ -67,9 +129,10 @@ def population_from_file(file_name):
             header = True
         else:
             data = line.split(",")
-            node = data[0]
+            node = int(data[0])
             for i in range(features):
                 population[node, i] = data[i+1]
+    f.close()
     return population
 
 

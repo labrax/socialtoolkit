@@ -15,7 +15,7 @@ from .algorithm.analysis.physical_groups import get_amount_physical_groups, get_
 from .algorithm.analysis.cultural_groups import get_amount_cultural_groups, get_size_biggest_cultural_groups, get_amount_cultural_groups_layer, get_size_biggest_cultural_groups_layer
 from .algorithm.analysis.util import overlap_similarity_layer
 from .algorithm.evolution import Axelrod, Centola, Klemm, MultilayerAxelrod, MultilayerCentola, MultilayerKlemm
-from .graph.network import Network
+from .graph.network import Network, graph_to_file, population_to_file
 
 import networkx as nx
 from time import time
@@ -37,6 +37,8 @@ def work(parameters):
 
     global_parameters = parameters['global_parameters']
 
+    directed = global_parameters['directed_graph']
+
     max_iterations = global_parameters['max_iterations']
     step_check = global_parameters['step_check']
     layers = global_parameters['layers']
@@ -54,6 +56,9 @@ def work(parameters):
     population_input = global_parameters['population_input']
     graph_input = global_parameters['graph_input']
 
+    population_output = global_parameters['population_output']
+    graph_output = global_parameters['graph_output']
+
     if layers > 1:
         if evolution_algorithm == 'axelrod':
             evolution_algorithm = MultilayerAxelrod
@@ -69,7 +74,7 @@ def work(parameters):
         elif evolution_algorithm == 'klemm':
             evolution_algorithm = Klemm
 
-    this_name = "output_gs{0}_f{1}_t{2}_l{3}_{4}.csv".format(width, features, traits, layers, evolution_algorithm.__name__)
+    this_name = "output_gs{0}_f{1}_t{2}_l{3}_{4}".format(width, features, traits, layers, evolution_algorithm.__name__)
     analysis = []
     headers = ['iteration']
 
@@ -93,61 +98,67 @@ def work(parameters):
         all_graphs = []
         for i in range(layers):
             if type(graph_input) == str:
-                all_graphs.append(graph_from_file(graph_input, i, layers))
+                all_graphs.append(graph_from_file(graph_input, directed, i, layers))
             else:
-                all_graphs.append(nx.grid_2d_graph(width, height))
+                if directed:
+                    all_graphs.append(nx.grid_2d_graph(width, height).to_directed())
+                else:
+                    all_graphs.append(nx.grid_2d_graph(width, height))
         network = Network(all_graphs, population, layers)
         experiment = EqualMultilayerExperiment(network, evolution_algorithm, convergence, layers, **parameters)
         for i in range(0, layers):
             experiment.all_model[i].overlap_function(overlap_similarity_layer, [i, layers])
         if analysis_step > 0:
             if physical:
-                analysis.append(CommandAnalysis(0, analysis_step, get_amount_physical_groups_unify, [network.graph]))
+                analysis.append(CommandAnalysis(0, analysis_step, get_amount_physical_groups_unify, [network]))
                 headers.append('amount_physical_groups')
             if biggest_physical:
-                analysis.append(CommandAnalysis(0, analysis_step, get_size_biggest_physical_groups_unify, [network.graph]))
+                analysis.append(CommandAnalysis(0, analysis_step, get_size_biggest_physical_groups_unify, [network]))
                 headers.append('biggest_physical_groups')
             if cultural:
-                analysis.append(CommandAnalysis(0, analysis_step, get_amount_cultural_groups, [network.population_data]))
+                analysis.append(CommandAnalysis(0, analysis_step, get_amount_cultural_groups, [network]))
                 headers.append('amount_cultural_groups')
             if biggest_cultural:
-                analysis.append(CommandAnalysis(0, analysis_step, get_size_biggest_cultural_groups, [network.population_data]))
+                analysis.append(CommandAnalysis(0, analysis_step, get_size_biggest_cultural_groups, [network]))
                 headers.append('biggest_cultural_groups')
             if not no_layer_by_layer:
                 for i in range(0, layers):
                     if physical:
-                        analysis.append(CommandAnalysis(0, analysis_step, get_amount_physical_groups, [network.graph[i]]))
+                        analysis.append(CommandAnalysis(0, analysis_step, get_amount_physical_groups, [network, i]))
                         headers.append(str(i) + 'amount_physical_groups')
                     if biggest_physical:
-                        analysis.append(CommandAnalysis(0, analysis_step, get_size_biggest_physical_groups, [network.graph[i]]))
+                        analysis.append(CommandAnalysis(0, analysis_step, get_size_biggest_physical_groups, [network, i]))
                         headers.append(str(i) + 'biggest_physical_groups')
                     if cultural:
-                        analysis.append(CommandAnalysis(0, analysis_step, get_amount_cultural_groups_layer, [network.population_data, i, layers]))
+                        analysis.append(CommandAnalysis(0, analysis_step, get_amount_cultural_groups_layer, [network, i]))
                         headers.append(str(i) + 'amount_cultural_groups')
                     if biggest_cultural:
-                        analysis.append(CommandAnalysis(0, analysis_step, get_size_biggest_cultural_groups_layer, [network.population_data, i, layers]))
+                        analysis.append(CommandAnalysis(0, analysis_step, get_size_biggest_cultural_groups_layer, [network, i]))
                         headers.append(str(i) + 'biggest_cultural_groups')
-                    # analysis.append(AmountIterationLayerAnalysis(experiment._curr, layers))##to enable fix OutputAnalysis to not use, and return on results
+                        # analysis.append(AmountIterationLayerAnalysis(experiment._curr, layers))##to enable fix OutputAnalysis to not use, and return on results
             experiment.add_analysis(analysis)
     else:
         if type(graph_input) == str:
-            graph = graph_from_file(graph_input)
+            graph = graph_from_file(graph_input, directed)
         else:
-            graph = nx.grid_2d_graph(width, height)
+            if directed:
+                graph = nx.grid_2d_graph(width, height).to_directed()
+            else:
+                graph = nx.grid_2d_graph(width, height)
         network = Network(graph, population, layers)
         experiment = Experiment(network, evolution_algorithm, convergence, **parameters)
         if analysis_step > 0:
             if physical:
-                analysis.append(CommandAnalysis(0, analysis_step, get_amount_physical_groups, [network.graph]))
+                analysis.append(CommandAnalysis(0, analysis_step, get_amount_physical_groups, [network]))
                 headers.append('amount_physical_groups')
             if biggest_physical:
-                analysis.append(CommandAnalysis(0, analysis_step, get_size_biggest_physical_groups, [network.graph]))
+                analysis.append(CommandAnalysis(0, analysis_step, get_size_biggest_physical_groups, [network]))
                 headers.append('biggest_physical_groups')
             if cultural:
-                analysis.append(CommandAnalysis(0, analysis_step, get_amount_cultural_groups, [network.population_data]))
+                analysis.append(CommandAnalysis(0, analysis_step, get_amount_cultural_groups, [network]))
                 headers.append('amount_cultural_groups')
             if biggest_cultural:
-                analysis.append(CommandAnalysis(0, analysis_step, get_size_biggest_cultural_groups, [network.population_data]))
+                analysis.append(CommandAnalysis(0, analysis_step, get_size_biggest_cultural_groups, [network]))
                 headers.append('biggest_cultural_groups')
             experiment.add_analysis(analysis)
 
@@ -156,50 +167,42 @@ def work(parameters):
 
     results['convergence_iterations'] = convergence_its
     results['convergence_time'] = end-start
-    #results += [convergence_its, (end-start)]
 
     if analysis_step > 0:
-        oa = OutputAnalysis(analysis, headers, output=output_dir+this_name)
+        oa = OutputAnalysis(analysis, headers, output=output_dir+this_name+".csv")
         oa.write()
+
+    if graph_output:
+        graph_to_file(network, this_name + ".el")
+    if population_output:
+        population_to_file(network, this_name + ".pd")
 
     if layers > 1:  # final results data
         if physical:
-            results['amount_physical_groups'] = get_amount_physical_groups_unify(network.graph)
-            #results.append(get_amount_physical_groups_unify(network.graph))
+            results['amount_physical_groups'] = get_amount_physical_groups_unify(network)
         if biggest_physical:
-            results['biggest_physical_group'] = get_size_biggest_physical_groups_unify(network.graph)
-            #results.append(get_size_biggest_physical_groups_unify(network.graph))
+            results['biggest_physical_group'] = get_size_biggest_physical_groups_unify(network)
         if cultural:
-            results['amount_cultural_groups'] = get_amount_cultural_groups(network.population_data)
-            #results.append(get_amount_cultural_groups(network.population_data))
+            results['amount_cultural_groups'] = get_amount_cultural_groups(network)
         if biggest_cultural:
-            results['biggest_cultural_group'] = get_size_biggest_cultural_groups(network.population_data)
-            #results.append(get_size_biggest_cultural_groups(network.population_data))
+            results['biggest_cultural_group'] = get_size_biggest_cultural_groups(network)
         if not no_layer_by_layer:
             for i in range(0, layers):
                 if physical:
-                    results['amount_physical_groups' + str(i)] = get_amount_physical_groups(network.graph[i])
-                    #results.append(get_amount_physical_groups(network.graph[i]))
+                    results['amount_physical_groups' + str(i)] = get_amount_physical_groups(network, i)
                 if biggest_physical:
-                    results['biggest_physical_group' + str(i)] = get_size_biggest_physical_groups(network.graph[i])
-                    #results.append(get_size_biggest_physical_groups(network.graph[i]))
+                    results['biggest_physical_group' + str(i)] = get_size_biggest_physical_groups(network, i)
                 if cultural:
-                    results['amount_cultural_groups' + str(i)] = get_amount_cultural_groups_layer(network.population_data, i, layers)
-                    #results.append(get_amount_cultural_groups_layer(network.population_data, i, layers))
+                    results['amount_cultural_groups' + str(i)] = get_amount_cultural_groups_layer(network, i)
                 if biggest_cultural:
-                    results['biggest_cultural_group' + str(i)] = get_size_biggest_cultural_groups_layer(network.population_data, i, layers)
-                    #results.append(get_size_biggest_cultural_groups_layer(network.population_data, i, layers))
+                    results['biggest_cultural_group' + str(i)] = get_size_biggest_cultural_groups_layer(network, i)
     else:
         if physical:
-            results['amount_physical_groups'] = get_amount_physical_groups(network.graph)
-            #results.append(get_amount_physical_groups(network.graph))
+            results['amount_physical_groups'] = get_amount_physical_groups(network)
         if biggest_physical:
-            results['biggest_physical_group'] = get_size_biggest_physical_groups(network.graph)
-            #results.append(get_size_biggest_physical_groups(network.graph))
+            results['biggest_physical_group'] = get_size_biggest_physical_groups(network)
         if cultural:
-            results['amount_cultural_groups'] = get_amount_cultural_groups(network.population_data)
-            #results.append(get_amount_cultural_groups(network.population_data))
+            results['amount_cultural_groups'] = get_amount_cultural_groups(network)
         if biggest_cultural:
-            results['biggest_cultural_group'] = get_size_biggest_cultural_groups(network.population_data)
-            #results.append(get_size_biggest_cultural_groups(network.population_data))
+            results['biggest_cultural_group'] = get_size_biggest_cultural_groups(network)
     return results

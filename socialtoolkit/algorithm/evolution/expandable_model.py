@@ -107,6 +107,7 @@ class MultilayerCentola(ExpandableAlgorithm):
     def __init__(self, G, population):
         super(MultilayerCentola, self).__init__(G, population, True, True)
 
+
 class MultilayerKlemm(ExpandableAlgorithm):
     """The algorithm for a multilayer Klemm.
 

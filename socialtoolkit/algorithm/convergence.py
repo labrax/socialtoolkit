@@ -5,8 +5,10 @@
 This source file contains the convergence data for an execution.
 """
 
+from .algorithm import Algorithm
 
-class Convergence:
+
+class Convergence(Algorithm):
     """Class for checking for convergence conditions."""
     def __init__(self, max_number_iterations=0, steps_without_update=0):
         """Args:

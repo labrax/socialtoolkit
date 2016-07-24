@@ -37,8 +37,8 @@ def run():
     evolution_algorithm = Axelrod
     experiment = Experiment(Network(G, population, 1), evolution_algorithm, convergence)
 
-    analysis = [CommandAnalysis(0, step_analysis, get_grid_groups_axelrod, [experiment._G, experiment._population]),
-                CommandAnalysis(0, step_analysis, get_amount_cultural_groups, [experiment._population])]
+    analysis = [CommandAnalysis(0, step_analysis, get_grid_groups_axelrod, [experiment.network]),
+                CommandAnalysis(0, step_analysis, get_amount_cultural_groups, [experiment.network])]
     experiment.add_analysis(analysis)
 
     return experiment.converge()
