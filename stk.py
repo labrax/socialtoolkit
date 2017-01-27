@@ -391,7 +391,7 @@ class STK:
     def write_global_data(self, target=sys.stdout):
         if type(target) == str:
             target = open(target, "w")
-        values = list(self.global_headers.iteritems())
+        values = list(self.global_headers.items())
         values.sort()
         for i,j in values:
             if i is None:

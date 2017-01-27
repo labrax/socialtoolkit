@@ -59,7 +59,7 @@ def graph_from_file(file_name, directed=False, curr_layer=0, amount_layers=0):
             continue
         if not header:
             nodes = int(line.split(" ")[0])
-            for i in range(0, nodes):
+            for i in range(0, nodes): #FIXME: Change after implementation of graph tool, see(http://stackoverflow.com/questions/36193773/graph-tool-surprisingly-slow-compared-to-networkx)
                 G.add_node(int(i))
             header = True
         else:

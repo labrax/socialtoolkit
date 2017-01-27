@@ -5,12 +5,16 @@ Toolkit for the simulation of models of social contagion and cultural disseminat
 > pip install networkx
 
 
-## Running
+## Running without Spark
 Example
 > python stk.py --traits=10 --features=10 --gridsize=10
+
 > ./stk.py -t 10 -f 10 -gs 10
+
 > ./stk.py -gs 100 -f 10 -t 1 10000 --layers 2 --algorithm centola
+
 > ./stk.py -gs 10 -f 10 -t 5 100 5 -l 2 -A centola
+
 > ./stk.py -t 1 5 -f 5 -l 5 -A axelrod
 
 
@@ -59,6 +63,7 @@ result = prepared_work.collect() #get the result as a list
 # TODO
 - [X] code documentation
 - [X] change spark directory (optional argument)
+- [ ] change graph library
 - [ ] range for layer range
 - [ ] use socialtoolkit.graph.graph
 - [ ] debug?
